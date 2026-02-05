@@ -1,0 +1,10 @@
+@import "tailwindcss";
+
+@plugin "daisyui" {
+  themes: light, dark, cupcake;
+}
+
+body {
+  margin: auto;
+  position: relative;
+}

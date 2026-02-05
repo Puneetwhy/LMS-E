@@ -1,0 +1,6 @@
+1--> npm i bcryptjs cloudinary cookie-parser cors dotenv express jsonwebtoken mongoose multer nodemailer --save
+
+2--> npm i morgan == It prints pretty (or structured) logs about every incoming HTTP request to your console/server logs.
+
+3 --> mongoose.set('strictQuery', false); == agar mai koi dtabase access ke liye koi extra query pass kar do jo data exist nhi krta to ignore kr dena koi error mat dena
+

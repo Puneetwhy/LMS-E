@@ -1,0 +1,6 @@
+{
+  "git.ignoreLimitWarning": true,
+  "editor.fontSize": 20,
+  "files.autoSave": "afterDelay",
+  "editor.wordWrap": "on"
+}
