@@ -38,7 +38,7 @@ const register = async (req, res, next ) =>{
       //if user not create properlly
 
       if(!user){
-            next(new appError('User registration failed, please try again', 400));
+             return next(new appError('User registration failed, please try again', 400));
       }
 
 
@@ -58,10 +58,13 @@ const register = async (req, res, next ) =>{
                         user.avatar.secure_url = result.secure_url;
 
                         //remove file from local system(server) we will keep only on cloudinary
-                        fs.rm(`uploads/${req.file.filename}`);
+                        fs.unlink(req.file.path, (err) => {
+                              if (err) console.log("File delete fail:", err.message);
+                              else console.log("File deleted");
+                        });
                   }
             }catch(e){
-                  return next(new appError(error || 'File not uploaded, please try again'));
+                  console.error("Upload error:", e.message);
             }
       }
 

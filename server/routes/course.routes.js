@@ -37,6 +37,7 @@ router.route("/:id")
       authorizedRoles,
       upload.single('thumbnail'),
       addLecturesToCourseById,
+
 );
 
 export default router;

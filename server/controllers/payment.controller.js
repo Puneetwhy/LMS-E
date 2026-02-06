@@ -1,13 +1,13 @@
-import User from "../models/user.model";
-import appError from "../utils/error.util";
-import { razorpay } from "../server";
+import User from "../models/user.model.js";
+import appError from "../utils/error.util.js";
+import { razorpay } from "../server.js";
 
 const getRazorpayApikey = async (req, res, next) => {
       try{
             res.status(200).json({
             success: true,
             message: 'Razorpay Api key',
-            key: process.env.YOUR_RAZORPAY_KEY
+            key: process.env.RAZORPAY_KEY_ID
              })
       }catch(e){
             return next(new appError(e.message, 500));
@@ -71,7 +71,7 @@ const verifySubscription = async (req, res ,next) => {
             await Payment.create({
                   razorpay_payment_id,
                   razorpay_signature,
-                  razorpay_subscription_id,
+                  razorpay_subscription_id
             })
 
             user.subscription.status = 'active';

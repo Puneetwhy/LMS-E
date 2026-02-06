@@ -40,7 +40,7 @@ const HomeLayout = ({ children }) => {
 
     return(
         <>
-          <div className="bg-zinc-800 min-h-[90vh] ">
+        <div className="bg-zinc-800 min-h-[90vh] ">
             <div className="drawer absolute left-0 z-50 w-fit">
                 <input type="checkbox" className="drawer-toggle " id="my-drawer" />
                 <div className="drawer-content"> 
@@ -99,7 +99,7 @@ const HomeLayout = ({ children }) => {
                                     </button>
 
                                     <button className='btn-secondary bg-cyan-600 hover:bg-cyan-800 transition-all ease-in-out duration-300 px-3 py-1 font-semibold rounded-md w-full'>
-                                        <Link to="/login">
+                                        <Link to="/signup">
                                             Signup                  
                                         </Link>
                                     </button>
@@ -134,7 +134,7 @@ const HomeLayout = ({ children }) => {
             { children }
 
             <Footer />
-          </div>
+        </div>
         </>
     )
 }

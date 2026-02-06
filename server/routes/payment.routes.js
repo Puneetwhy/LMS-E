@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { allPayment, buySubscription, cancelSubscription, getRazorpayApikey, verifySubscription } from '../controllers/payment.controller';
-import { authorizedRoles, isLoggedIn } from '../middlewares/auth.middleware';
+import { allPayment, buySubscription, cancelSubscription, getRazorpayApikey, verifySubscription } from '../controllers/payment.controller.js';
+import { authorizedRoles, isLoggedIn } from '../middlewares/auth.middleware.js';
 
 const router = Router();
 

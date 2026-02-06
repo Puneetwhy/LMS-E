@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from  'crypto';
 
+
 const userSchema = new Schema({
       fullName : {
             type : 'String',
@@ -58,21 +59,19 @@ const userSchema = new Schema({
       timestamps : true
 });
 
-//if passwaord is not encrypted do nothing move forward
-userSchema.pre('save', async(next) => {
-      if(!this.isModified('password')){
-            return next();
-      }
 
-      //if encrypted then
+userSchema.pre('save', async function (next) {
 
-      this.password = await bcrypt.hash(this.password, 10);
-})
+    if (this && typeof this.isModified === 'function' && this.isModified('password')) {
+        this.password = await bcrypt.hash(this.password, 10);
+    } else {
+        console.log("[PRE-SAVE] Password not modified or this.isModified missing");
+    }
 
-//here we writting generic method
+});
 
 userSchema.methods = { 
-      generateJWTToken : async () => {
+      generateJWTToken : async function() {
             return await jwt.sign({
                   id: this._id,
                   email: this.email,
@@ -88,7 +87,6 @@ userSchema.methods = {
       )
       },
 
-      //yahan par ham plain password or encrypted  password ko compare krenge
 
       comparePassword : async (plainTextPassword) => {
             return await bcrypt.compare(plainTextPassword, this.password)
@@ -100,7 +98,7 @@ userSchema.methods = {
                   .createHash('sha256')
                   .update(resetToken)
                   .digest('hex');
-            this.frogotPasswordExpiry = Date.now() + 15 * 60 * 1000; //15 minute from now  
+            this.forgotPasswordExpiry = Date.now() + 15 * 60 * 1000; 
             return resetToken;
       }
 }
