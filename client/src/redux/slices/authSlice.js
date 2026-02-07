@@ -58,18 +58,48 @@ export const login = createAsyncThunk("/auth/login", async(data) => {
     }
 })
 
+export const logout = createAsyncThunk( "/auth/logout", async ()=> {
+    try{
+        const promise = axiosInstance.post("user/logout");
+        console.log(promise)  
+        toast.promise(promise,{
+            loading: "Wait! logout in progress...",
+            success: (res) => {                      
+                return res?.data?.message;
+            },
+            error: (err) => { 
+                return err?.response?.data?.message || "Failed to logout";
+            }
+        });
+
+        const res = await promise;
+        return res.data; 
+
+    }catch(error){
+        toast.error(error?.response?.data?.message);
+    }
+})
+
 const authSlice = createSlice({
     name: 'auth',
     initialState,
     reducers: {},
     extraReducers: (builder) => {
-        builder.addCase(login.fulfilled, (state, action) => {
+        builder
+        .addCase(login.fulfilled, (state, action) => {
             localStorage.setItem("data", JSON.stringify(action?.payload?.user));
             localStorage.setItem("isLoggedIn", true);
             localStorage.setItem("role", action?.payload?.user?.role);
             state.isLoggedIn = true;
             state.data = action?.payload?.user;
             state.role = action?.payload?.user?.role
+        })
+
+        .addCase(logout.fulfilled, (state) => {
+            localStorage.clear();
+            state.data = {};
+            state.isLoggedIn = false;
+            state.role = "";
         })
     }
 });
