@@ -101,7 +101,7 @@ const login = async (req, res, next) => {
                         }).select('+password'); //hmne password ke select false kiya hai to hme exiplicitly password mangna padega
 
 
-            if(!user || !user.comparePassword(password)){
+            if(!user || !(await user.comparePassword(password))){
                   return next(new appError(`Email or password doesn't match`, 400))
             }
 

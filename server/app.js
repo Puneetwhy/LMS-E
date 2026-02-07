@@ -42,8 +42,8 @@ app.use('/ping', (req, res) => {
 //routes of three module
 
 app.use('/api/v1/user', userRoutes);
-app.use('api/v1/courses', courseRoutes);
-app.use('api/v1/payments', paymentRoutes);
+app.use('/api/v1/courses', courseRoutes);
+app.use('/api/v1/payments', paymentRoutes);
 
 
 //agar user undefined url deta hai 

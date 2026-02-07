@@ -9,13 +9,9 @@ const HomeLayout = ({ children }) => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
-    const isLoggedIn = useSelector((state) => {
-        state?.auth?.isLoggedIn
-    });
+    const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
+    const role = useSelector((state) => state.auth.role);
 
-    const role = useSelector((state) => {
-        state?.auth?.role
-    })
     const changeWidth = () => {
         const drawerSide = document.getElementsByClassName("drawer-side")
         drawerSide[0].style.width = 'auto';
