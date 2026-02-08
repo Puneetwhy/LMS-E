@@ -6,6 +6,7 @@ import NotFound from './pages/NotFound';
 import Signup from './pages/Signup';
 import Login from './pages/Login';
 import CourseList from './pages/course/CourseList';
+import Contact from './pages/Contact';
 // import Footer from './components/Footer'
 
 function App() {
@@ -18,6 +19,8 @@ function App() {
         <Route path="/signup" element={ <Signup /> }></Route>
         <Route path="/login" element={ <Login /> }></Route>
         <Route path="/courses" element={ <CourseList /> }></Route>
+        <Route path="/contact" element={ <Contact /> }></Route>
+
 
         <Route path="*" element={ <NotFound /> }></Route>
 

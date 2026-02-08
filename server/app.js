@@ -6,6 +6,7 @@ import cookieParser from 'cookie-parser';
 import morgan from 'morgan'
 import userRoutes from './routes/user.routes.js';
 import courseRoutes from "./routes/course.routes.js"
+import contactRoutes from "./routes/miscellaneous.routes.js"
 import paymentRoutes from "./routes/payment.routes.js"
 import errorMiddleware from './middlewares/error.middleware.js';
 
@@ -44,6 +45,8 @@ app.use('/ping', (req, res) => {
 app.use('/api/v1/user', userRoutes);
 app.use('/api/v1/courses', courseRoutes);
 app.use('/api/v1/payments', paymentRoutes);
+app.use('/api/v1/contact', contactRoutes);
+
 
 
 //agar user undefined url deta hai 
