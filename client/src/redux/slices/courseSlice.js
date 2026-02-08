@@ -1,6 +1,4 @@
-import { createAsyncThunk } from "@reduxjs/toolkit";
-import { getAllCourses } from "../../../../server/controllers/course.controller";
-import reducer from "./authSlice"
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axiosInstance from "../../helpers/axiosInstance";
 
 const initialState = {
@@ -27,7 +25,12 @@ const courseSlice = createSlice({
     initialState,
     reducers: {},
     extraReducers: (builder) => {
-        
+        builder.addCase(getAllCourses.fulfilled, (state, action) =>{
+            if(action.payload){
+                state.courseData = [...action.payload];
+                
+            }
+        })
     }
 })
 
