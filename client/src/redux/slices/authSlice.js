@@ -5,7 +5,7 @@ import { toast } from "react-hot-toast";
 const initialState = {
     isLoggedIn: localStorage.getItem('isLoggedIn') || false,
     role: localStorage.getItem('role') || "",
-    data: JSON.parse(localStorage.getItem("data")) || {},
+    data: localStorage.getItem("data") !== undefined ? JSON.parse(localStorage.getItem("data")) : {},
 };
 
 export const createAccount = createAsyncThunk("/auth/signup", async(data) => {
@@ -80,6 +80,37 @@ export const logout = createAsyncThunk( "/auth/logout", async ()=> {
     }
 })
 
+export const updateProfile = createAsyncThunk( "/user/update/profile", async (data)=> {
+    try{
+        const promise = axiosInstance.put(`/user/update/${data[0]}`,data[1]);  
+        toast.promise(promise,{
+            loading: "Wait! profile update in progress...",
+            success: (res) => {                      
+                return res?.data?.message;
+            },
+            error: "Failed to update profile" 
+        });
+
+        const res = await promise;
+        return res.data; 
+
+    }catch(error){
+        toast.error(error?.response?.data?.message);
+    }
+})
+
+export const getUserData = createAsyncThunk( "/user/details", async ()=> {
+    try{
+        const promise = axiosInstance.get("/user/me");  
+        const res = await promise;
+        return res.data; 
+
+    }catch(error){
+        toast.error(error.message);
+    }
+})
+
+
 const authSlice = createSlice({
     name: 'auth',
     initialState,
@@ -101,8 +132,17 @@ const authSlice = createSlice({
             state.isLoggedIn = false;
             state.role = "";
         })
+
+        .addCase(getUserData.fulfilled, (state, action) => {
+            localStorage.setItem("data", JSON.stringify(action?.payload?.user));
+            localStorage.setItem("isLoggedIn", true);
+            localStorage.setItem("role", action?.payload?.user?.role);
+            state.isLoggedIn = true;
+            state.data = action?.payload?.user;
+            state.role = action?.payload?.user?.role
+        })
     }
 });
 
-//export const {} = authSlice.actions;
+export const {} = authSlice.actions;
 export default authSlice.reducer;

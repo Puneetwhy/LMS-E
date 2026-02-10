@@ -38,7 +38,7 @@ const HomeLayout = ({ children }) => {
     return(
         <>
         <div className="bg-zinc-800 min-h-[90vh] ">
-            <div className="drawer fixed absolute left-0 z-50 w-fit">
+            <div className="drawer fixed left-0 z-50 w-fit">
                 <input type="checkbox" className="drawer-toggle " id="my-drawer" />
                 <div className="drawer-content"> 
                     <label htmlFor="my-drawer" className="cursor-pointer relative ">

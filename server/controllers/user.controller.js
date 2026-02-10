@@ -137,7 +137,7 @@ const logout = (req, res) => {
 
 const getProfile = async (req, res, next) => {
       try{
-            const userId = req.use.id;
+            const userId = req.user.id;
             const user = await User.findById(userId);
             res.status(200).json({
                   success : true,
@@ -149,7 +149,7 @@ const getProfile = async (req, res, next) => {
       }
 }
 
-const forgotPassword = async(req, res, next) => {
+async function forgotPassword(req, res, next) {
       const { email } = req.body;
 
       if(!email){
@@ -190,7 +190,7 @@ const forgotPassword = async(req, res, next) => {
       }
 }
 
-const resetPassword = async (req, res, next) => {
+async function resetPassword(req, res, next){
       const { resetToken } = req.params;
       const { password } = req.body;
       const forgotPasswordToken = crypto
@@ -219,7 +219,7 @@ const resetPassword = async (req, res, next) => {
       })
 }
 
-const changePassword = async (req, res, next) => {
+async function changePassword(req, res, next) {
       const { oldPassword, newPassword } = req.body;
       const { id } = req.user;
 
@@ -251,11 +251,11 @@ const changePassword = async (req, res, next) => {
       })
 }
 
-const updateUser = async (req, res, next ) => {
-      const { fullName } = req.body;
-      const { id } = req.user.id;
+async function updateUser (req, res, next ) {
+      const {fullName} = req.body;
+      const id = req.user.id;
 
-      const user = await User.findById( id );
+      const user = await User.findById(id);
 
       if(!user){
             return next(new appError('User does not exist', 400));
