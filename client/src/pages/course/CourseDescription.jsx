@@ -1,9 +1,10 @@
-import { useLocation } from "react-router-dom"
+import { Navigate, useLocation } from "react-router-dom"
 import HomeLayout from "../../layouts/HomeLayout";
 
 const CourseDescription = () => {
 
     const {state} = useLocation();
+    const navigate = new Navigate();
 
     return (
         <HomeLayout >
@@ -38,7 +39,7 @@ const CourseDescription = () => {
                                     Watch lectures
                                 </button>
                                 ) : (
-                                    <button className="bg-yellow-600 text-xl rounded-md font-bold px-5 py-3 w-full hover:bg-yellow-500 transition-all ease-in-out duration-300">
+                                    <button onClick={() => Navigate("/checkout")} className="bg-yellow-600 text-xl rounded-md font-bold px-5 py-3 w-full hover:bg-yellow-500 transition-all ease-in-out duration-300">
                                         Subscribe
                                     </button>
                                 )  

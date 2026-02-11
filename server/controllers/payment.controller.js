@@ -1,6 +1,8 @@
 import User from "../models/user.model.js";
 import appError from "../utils/error.util.js";
 import { razorpay } from "../server.js";
+import Payment from "../models/payment.model.js"
+import crypto from "crypto";
 
 const getRazorpayApikey = async (req, res, next) => {
       try{
@@ -16,6 +18,7 @@ const getRazorpayApikey = async (req, res, next) => {
 
 const buySubscription = async (req, res, next) => {
       try{
+            console.log("PLAN ID:", process.env.RAZORPAY_PLAN_ID);
             const { id } = req.user;
             const user = await User.findById( id );
 
@@ -29,11 +32,18 @@ const buySubscription = async (req, res, next) => {
 
             const subscription = await razorpay.subscriptions.create({
                   plan_id: process.env.RAZORPAY_PLAN_ID,
-                  customer_notify: 1
+                  customer_notify: 1,
+                  total_count: 12
             });
 
-            user.subscription.id = subscription.id;
-            user.subscription.status = subscription.status;
+            user.subscription = {
+                  id: subscription.id,
+                  status: subscription.status
+            };
+
+
+            // user.subscription.id = subscription.id;
+            // user.subscription.status = subscription.status;
 
             await user.save();
 
@@ -43,6 +53,7 @@ const buySubscription = async (req, res, next) => {
                   subscription_id: subscription.id,
             })
       }catch(e){
+             console.log("BUY SUBSCRIPTION ERROR:", e);
             return next(new appError(e.message, 500));
       }
 }

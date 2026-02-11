@@ -1,10 +1,11 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit"
 import axios from "axios";
+import { toast } from "react-hot-toast";
 import axiosInstance from "../../helpers/axiosInstance";
 
 const initialState = {
     key: "",
-    subscription: "",
+    subscription_id: "",
     isPaymentVerified: false,
     allPayments: {},
     finalMonths: {},

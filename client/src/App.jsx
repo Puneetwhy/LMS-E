@@ -13,6 +13,8 @@ import RequireAuth from './components/auth/RequireAuth';
 import CreateCourse from './pages/course/CreateCourse';
 import UserProfile from './pages/user/UserProfile';
 import EditProfile from './pages/user/EditProfile';
+import Checkout from './pages/payment/Checkout';
+import CheckoutSuccess from './pages/payment/CheckoutSuccess';
 // import Footer from './components/Footer'
 
 function App() {
@@ -36,7 +38,8 @@ function App() {
         <Route  element={ <RequireAuth allowedRoles= { ["ADMIN", "USER"]} /> }>
           <Route path="/user/profile" element={ <UserProfile /> }></Route>
           <Route path="/user/editprofile" element={ <EditProfile /> }></Route>
-          
+          <Route path="/checkout" element={ <Checkout /> }></Route>
+          <Route path="/checkout/success" element={ <CheckoutSuccess /> }></Route>
         </Route>
 
         <Route path="*" element={ <NotFound /> }></Route>
