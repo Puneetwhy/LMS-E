@@ -15,6 +15,7 @@ import UserProfile from './pages/user/UserProfile';
 import EditProfile from './pages/user/EditProfile';
 import Checkout from './pages/payment/Checkout';
 import CheckoutSuccess from './pages/payment/CheckoutSuccess';
+import CheckoutFailure from './pages/payment/CheckoutFailure';
 // import Footer from './components/Footer'
 
 function App() {
@@ -40,6 +41,7 @@ function App() {
           <Route path="/user/editprofile" element={ <EditProfile /> }></Route>
           <Route path="/checkout" element={ <Checkout /> }></Route>
           <Route path="/checkout/success" element={ <CheckoutSuccess /> }></Route>
+          <Route path="/checkout/fail" element={ <CheckoutFailure /> }></Route>
         </Route>
 
         <Route path="*" element={ <NotFound /> }></Route>
