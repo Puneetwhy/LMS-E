@@ -1,6 +1,6 @@
 import appError from "../utils/error.util.js";
 import jwt from "jsonwebtoken";
-import {User} from "../models/user.model.js"
+import User from "../models/user.model.js"
 
 const isLoggedIn = async (req, res, next) => {
       const { token } = req.cookies;
