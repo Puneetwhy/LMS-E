@@ -20,13 +20,13 @@ const DisplayLectures = () => {
     await dispatch(getCourseLectures(courseId));
   }
 
-  // useEffect(() => {
-  //   if(!state){
-  //     navigate('/courses')
-  //   }
+  useEffect(() => {
+    if(!state){
+      navigate('/courses')
+    }
 
-  //   dispatch(getCourseLectures(state._id))
-  // }, []);
+    dispatch(getCourseLectures(state._id))
+  }, []);
 
   return (
     <HomeLayout>
