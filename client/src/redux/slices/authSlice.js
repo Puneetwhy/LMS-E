@@ -10,7 +10,7 @@ const initialState = {
             const value = localStorage.getItem("data");
             if (!value || value === "undefined") return {};
             return JSON.parse(value);
-        } catch {
+        } catch{
             return {};
         }
     })(),

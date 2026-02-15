@@ -19,8 +19,8 @@ const AdminDashboard = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
-    const {allUserCount , subscribedCount} = useSelector();
-    const [allPayments, finalMonths, monthlySalesRecord] = useSelector((state) => state.razorpay); 
+    const { allUserCount = 0, subscribedCount = 0 } = useSelector(state => state.stat);
+    const { allPayments = { count: 0 }, monthlySalesRecord = [] } = useSelector(state => state.razorpay);
 
     const userData = {
       labels: ["Registered User", "Enrolled User"],
@@ -30,7 +30,7 @@ const AdminDashboard = () => {
         data: [allUserCount, subscribedCount],
         backgroundColor:["yellow", "green"],
         borderWidth: 1,
-        borderColer: ["yellow", "green"]
+        borderColor: ["yellow", "green"]
       }]
     };
 
@@ -39,14 +39,14 @@ const AdminDashboard = () => {
       fontColor: "white",
       datasets:[{
         label:"Sales/Month",
-        data: monthlySalesRecord,
-        backgroundColor:["rgb(255, 99, 132)"],
+        data: monthlySalesRecord?.length === 12 ? monthlySalesRecord : new Array(12).fill(0),
+        backgroundColor:"rgb(255, 99, 132)",
         borderWidth: 2, 
-        borderColer: ["white"]
+        borderColor: ["white"]
       }]
     };
 
-    const myCourses = useSelector((state) => state?.course?.courseData);
+    const myCourses = useSelector(state => state.course?.courseData || []);
 
     async function onCourseDelete(id){
       if(window.confirm("Are you sure you want to delete the course ?")){
@@ -65,7 +65,7 @@ const AdminDashboard = () => {
       };
 
       fetchData();
-    }, [dispatch]);
+    }, []);
 
   return (
     <HomeLayout>
@@ -132,7 +132,7 @@ const AdminDashboard = () => {
                         Total Revenue
                       </p>
                       <h3 className="text-4xl font-bold ">
-                        {allPayments?.count * 499}
+                        {(allPayments?.count || 0) * 499}
                       </h3>
                     </div>
                     <GiMoneyStack className="text-green-500 text-5xl "/>

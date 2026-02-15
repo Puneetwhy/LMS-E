@@ -83,7 +83,7 @@ const Login = () => {
                             value={loginData.password} />
                     </div>
 
-                    <button type="submit" cclassName="w-full bg-yellow-600 py-2 hover:bg-yellow-500 transition-all ease-in-out duration-300 mt-2 rounded-sm font-semibold text-lg cursor-pointer">Login</button>
+                    <button type="submit" className="w-full bg-yellow-600 py-2 hover:bg-yellow-500 transition-all ease-in-out duration-300 mt-2 rounded-sm font-semibold text-lg cursor-pointer">Login</button>
 
                     <p className="text-center">
                         Don't have an account ? <Link to="/signup" className="link text-cyan-600 cursor-pointer">Signup</Link>

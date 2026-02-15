@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useDispatch } from "react-redux"
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { createNewCourse } from "../../redux/slices/courseSlice";
 import HomeLayout from "../../layouts/HomeLayout";
 import { AiOutlineArrowLeft } from "react-icons/ai";
