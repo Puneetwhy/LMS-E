@@ -92,9 +92,11 @@ const Signup = () => {
         <HomeLayout>
             <div className="flex items-center justify-center min-h-[90vh]">
 
-                <form noValidate onSubmit={createNewAccount} className="flex flex-col justify-center rounded-lg gap-3 p-4 text-white w-1/4 shadow-[0_0_10px_black]">
+                <form noValidate onSubmit={createNewAccount} className="flex flex-col justify-center rounded-lg gap-3 p-4 text-white w-[90%] sm:w-[70%] md:w-[50%] lg:w-1/4 shadow-[0_0_10px_black]">
 
-                    <h1 className="text-xl text-center font-bold">Registration Page</h1>
+                    <h1 className="text-xl sm:text-2xl text-center font-bold">
+                        Registration Page
+                    </h1>
 
                     <label htmlFor="image_uploads" className="cursor-pointer">
                         {prevImage ? (
@@ -123,7 +125,7 @@ const Signup = () => {
                             name="fullName"
                             id="fullName"
                             placeholder="Enter your name.."
-                            className="bg-transparent px-2 py-1 border"
+                            className="bg-transparent px-3 py-2 border rounded-sm focus:outline-none focus:ring-1 focus:ring-yellow-500"
                             onChange={handleUserInput}
                             value={signupData.fullName} />
                     </div>
@@ -139,7 +141,7 @@ const Signup = () => {
                             name="email"
                             id="email"
                             placeholder="Enter your email.."
-                            className="bg-transparent px-2 py-1 border"
+                            className="bg-transparent px-3 py-2 border rounded-sm focus:outline-none focus:ring-1 focus:ring-yellow-500"
                             onChange={handleUserInput}
                             value={signupData.email} />
                     </div>
@@ -155,12 +157,12 @@ const Signup = () => {
                             name="password"
                             id="password"
                             placeholder="Enter your password.."
-                            className="bg-transparent px-2 py-1 border"
+                            className="bg-transparent px-3 py-2 border rounded-sm focus:outline-none focus:ring-1 focus:ring-yellow-500"
                             onChange={handleUserInput}
                             value={signupData.password} />
                     </div>
 
-                    <button type="submit" className="bg-yellow-600 py-2 hover:bg-yellow-500 transition-all ease-in-out duration-300 mt-2 rounded-sm font-semibold text-lg cursor-pointer">Create account</button>
+                    <button type="submit" className="w-full bg-yellow-600 py-2 hover:bg-yellow-500 transition-all ease-in-out duration-300 mt-2 rounded-sm font-semibold text-base sm:text-lg cursor-pointer">Create account</button>
 
                     <p className="text-center">
                         Already have an account ? <Link to="/login" className="link text-cyan-600 cursor-pointer">Login</Link>

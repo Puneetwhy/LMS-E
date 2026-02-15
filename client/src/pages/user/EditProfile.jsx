@@ -68,14 +68,14 @@ const EditProfile = () => {
     return(
         <>
             <HomeLayout>
-                <div className="min-h-[100vh] flex items-center justify-center ">
+                <div className="min-h-screen flex items-center justify-center px-4">
                     <form 
                         noValidate
                         onSubmit={onFormSubmit}
-                        className="flex flex-col justify-center gap-5 rounded-lg p-4 text-white w-1/4 min-h-[26rem] shadow-[0_0_10px_black]"
+                        className="flex flex-col justify-center gap-5 rounded-lg p-6 text-white w-full max-w-md min-h-[26rem] shadow-[0_0_10px_black] bg-gray-900"
 
                     >
-                        <h1 className="text-center text-2xl font-semibold">Edit profile</h1>
+                        <h1 className="text-center text-xl sm:text-2xl font-semibold">Edit profile</h1>
 
                         <label 
                             htmlFor="image_uploads"
@@ -85,7 +85,7 @@ const EditProfile = () => {
                                 data.previewImage ? (
                                     <img 
                                     src={data.previewImage} 
-                                    className="w-28 h-28 rounded-full m-auto" />
+                                    className="w-24 h-24 sm:w-28 sm:h-28 rounded-full m-auto object-cover" />
                                 ):(
                                     <BsPersonCircle  className="w-28 h-28 rounded-full m-auto"/>
                                 )
@@ -115,21 +115,21 @@ const EditProfile = () => {
                             id="fullName"
                             placeholder="Enter your name"
                             value={data.fullName}
-                            className="bg-transparent px-2 py-1 border" 
+                            className="bg-transparent px-3 py-2 border rounded-md focus:outline-none focus:border-yellow-500 transition"
                             onChange={handleInputChange }/>
                          </div>
 
-                         <div className="flex items-center justify-center gap-4 ">
+                         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                         
                             <button 
                             type="submit"
-                            className="w-1/3 bg-yellow-600 hover:bg-yellow-500 rounded-md transition-all ease-in-out duration-300 font-semibold py-2 cursor-pointer text-center">
+                            className="w-full sm:w-1/2 bg-yellow-600 hover:bg-yellow-500 rounded-md transition-all duration-300 font-semibold py-2 text-center">
                                     Update profile
                             </button>
 
                             <Link
                             to="/user/profile"
-                            className="w-1/3 border border-yellow-600 hover:border-yellow-500 rounded-md transition-all ease-in-out duration-300 font-semibold py-2 cursor-pointer text-center"
+                            className="w-full sm:w-1/2 border border-yellow-600 hover:border-yellow-500 rounded-md transition-all duration-300 font-semibold py-2 text-center"
                             >
                                 <button>
                                     Discard

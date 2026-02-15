@@ -68,23 +68,24 @@ const CreateCourse = () => {
   return (
     <>
         <HomeLayout>
-            <div className="h-[100vh] flex items-center justify-center">
+            <div className="min-h-[90vh] flex items-center justify-center px-4 sm:px-6">
+
                 <form 
                     onSubmit={onFormSubmit}
-                    className="flex flex-col justify-center gap-5 rounded-lg p-4 text-white w-[700px] my-10 shadow-[0_0_10px_black] relative">
+                    className="flex flex-col justify-center gap-5 rounded-lg p-4 sm:p-6 text-white w-full max-w-[700px] my-10 shadow-[0_0_10px_black] relative">
                         <Link className="absolute top-8 text-2xl text-accent cursor-pointer">
                             <AiOutlineArrowLeft />
                         </Link>
                         <h1 className="text-xl text-white font-bold text-center">Create new course</h1>
 
-                        <main className="grid grid-col-2 gap-x-10">
+                        <main className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-x-10">
                             <div className="gap-y-6">
                                 <div>
                                     <label htmlFor="image_uploads" className="cursor-pointer">
                                         {userInput.previewImage ? (
-                                            <img className="w-full h-44 m-auto border" src={userInput.previewImage} alt="" />
+                                            <img className="w-full h-40 sm:h-44 m-auto border object-cover" src={userInput.previewImage} alt="" />
                                         ) : (
-                                            <div className="w-full h-44 m-auto flex items-center justify-center border" >
+                                            <div className="w-full h-40 sm:h-44 m-auto flex items-center justify-center border text-center px-2">
                                                 <h1 className="font-bold text-lg">Upload your course thumbnail</h1>
                                             </div>
                                         )}
@@ -99,7 +100,7 @@ const CreateCourse = () => {
                                 </div>
 
                                 <div className="flex flex-col gap-1">
-                                    <label htmlFor="title" className="text-lg font-semibold ">
+                                    <label htmlFor="title" className="text-base sm:text-lg font-semibold">
                                         Course title
                                     </label>
 
@@ -118,7 +119,7 @@ const CreateCourse = () => {
 
                             <div className="flex flex-col gap-1">
                                 <div className="flex flex-col gap-1">
-                                    <label htmlFor="createdBy" className="text-lg font-semibold ">
+                                    <label htmlFor="createdBy" className="text-base sm:text-lg font-semibold">
                                         Course Intructor
                                     </label>
 
@@ -135,7 +136,7 @@ const CreateCourse = () => {
                                 </div>
 
                                 <div className="flex flex-col gap-1">
-                                    <label htmlFor="category" className="text-lg font-semibold ">
+                                    <label htmlFor="category" className="text-base sm:text-lg font-semibold">
                                         Course category
                                     </label>
 
@@ -152,7 +153,7 @@ const CreateCourse = () => {
                                 </div>
 
                                 <div className="flex flex-col gap-1">
-                                    <label htmlFor="discription" className="text-lg font-semibold ">
+                                    <label htmlFor="discription" className="text-base sm:text-lg font-semibold">
                                         Course discription
                                     </label>
 
@@ -171,7 +172,7 @@ const CreateCourse = () => {
                             </div>
                         </main>
 
-                        <button type="submit" className=" w-full cursor-pointer font-semibold text-lg py-2  bg-yellow-600 hover:bg-yellow-500 transition-all ease-in-out duration-300 rounded-md">
+                        <button type="submit" className="w-full cursor-pointer font-semibold text-base sm:text-lg py-2 sm:py-3 bg-yellow-600 hover:bg-yellow-500 transition-all ease-in-out duration-300 rounded-md">
                             Create course
                         </button>
 

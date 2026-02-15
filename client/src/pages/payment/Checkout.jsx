@@ -76,14 +76,15 @@ const Checkout = () => {
     <HomeLayout>
         <form 
             onSubmit={handleSubscription}
-            className="flex min-h-[100vh] items-center justify-center text-white">
+            className="flex min-h-screen items-center justify-center text-white px-4">
 
-                <div className="flex flex-col w-1/3 shadow-[0_0_10px_black] items-center justify-center h-[26rem] rounded-lg relative">
+                <div className="flex flex-col w-full max-w-md shadow-[0_0_10px_black] items-center justify-center min-h-[26rem] rounded-lg relative p-6"
+>
 
-                    <h1 className="bg-yellow-500 text-center rounded-t-lg text-xl font-semibold absolute top-0 w-full py-4">Subscription Bundle</h1>
+                    <h1 className="bg-yellow-500 text-center rounded-t-lg text-lg sm:text-xl font-semibold absolute top-0 w-full py-4">Subscription Bundle</h1>
 
                     <div className="flex space-y-4 flex-col items-center text-center">
-                        <p className="text-[17px]">
+                        <p className="text-sm sm:text-base">
                             This purchase will allow you to access all available courses
                             of our plateform {" "}
                             <span className="text-yellow-500 font-bold">
@@ -93,7 +94,7 @@ const Checkout = () => {
                             All the existing and new launch courses will be also available
                         </p>
 
-                        <p className="flex items-center justify-center gap-1 text-2xl font-bold">
+                        <p className="flex items-center justify-center gap-1 text-xl sm:text-2xl font-bold">
                             <FaRupeeSign className="text-yellow-500"/><span className="text-orange-500">499</span>only
                         </p>
 
@@ -102,7 +103,7 @@ const Checkout = () => {
                             <p>* Terms and conditions applied</p>
                         </div>
 
-                        <button type="submit" className="flex font-bold text-xl items-center justify-center absolute w-1/3 bottom-5.5 py-2 px-1 bg-yellow-600 hover:bg-yellow-500 hover:text-cyan-700 ease-in-out duration-300 rounded-lg">
+                        <button type="submit" className="mt-6 w-full sm:w-2/3 font-bold text-lg sm:text-xl py-2 bg-yellow-600 hover:bg-yellow-500 hover:text-cyan-700 transition-all duration-300 rounded-lg">
                             Buy now
                         </button>
                     </div>

@@ -14,9 +14,9 @@ const CheckoutSuccess = () => {
   })
   return (
     <HomeLayout>
-        <div className="min-h-[100vh] flex items-center justify-center text-white">
-            <div className="w-1/3 h-[26rem] flex flex-col justify-center items-center shadow-[0_0_10px_black] rounded-lg relative">
-              <h1 className="bg-green-600 absolute top-0 py-4 text-center text-2xl font-bold rounded-t-lg w-full">
+        <div className="min-h-screen flex items-center justify-center text-white px-4">
+            <div className="w-full max-w-md min-h-[26rem] flex flex-col justify-center items-center shadow-[0_0_10px_black] rounded-lg relative bg-gray-900 p-6">
+              <h1 className="bg-green-600 absolute top-0 py-4 text-center text-xl sm:text-2xl font-bold rounded-t-lg w-full">
                 Payment Successfull!
               </h1>
 
@@ -26,14 +26,14 @@ const CheckoutSuccess = () => {
                     Welcome to the pro bundle
                   </h2>
 
-                  <p className="text-left">
+                  <p className="text-center text-sm sm:text-base">
                       Now you can enjoy all the courses.
                   </p>
                 </div>
 
                 <AiFillCheckCircle className="text-center text-5xl text-green-500"/>
               </div>
-              <Link to="/" className="bg-green-500 hover:bg-green-600 transition-all ease-in-out duration-300 py-2 px-3 rounded-lg absolute bottom-5 font-semibold">
+              <Link to="/" className="mt-6 bg-green-500 hover:bg-green-600 transition-all duration-300 py-2 px-6 rounded-lg font-semibold w-full text-center">
                 <button>
                   Go to dashboard
                 </button>

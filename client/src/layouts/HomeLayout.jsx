@@ -37,108 +37,111 @@ const HomeLayout = ({ children }) => {
 
     return(
         <>
-        <div className="bg-zinc-800 min-h-[90vh] ">
-            <div className="drawer fixed left-0 z-50 w-fit">
-                <input type="checkbox" className="drawer-toggle " id="my-drawer" />
-                <div className="drawer-content"> 
-                    <label htmlFor="my-drawer" className="cursor-pointer relative ">
-                        <FiMenu 
-                            onClick={ changeWidth }
-                            size={"32px"}
-                            className='font-bold text-white m-4'
-                        />
-                    </label>
-                </div>
-                <div className='drawer-side text-white w-0'>
-                    <label htmlFor="my-drawer" className="drawer-overlay"></label>
+        <div className="bg-zinc-800 min-h-[90vh] w-full flex justify-center">
+            <div className="w-full max-w-[1440px] relative">
+                <div className="drawer fixed left-0 z-50 w-fit">
+                    <input type="checkbox" className="drawer-toggle " id="my-drawer" />
+                    <div className="drawer-content"> 
+                        <label htmlFor="my-drawer" className="cursor-pointer relative ">
+                            <FiMenu 
+                                onClick={ changeWidth }
+                                size={"32px"}
+                                className='font-bold text-white m-4'
+                            />
+                        </label>
+                    </div>
+                    <div className='drawer-side text-white w-0 md:w-auto'>
+                        <label htmlFor="my-drawer" className="drawer-overlay"></label>
 
-                    <ul className="menu p-4 w-48 h-full bg-zinc-800 sm:w-80  text-base-content relative  ">
-                        <li className='w-fit absolute right-2 z-50'>
-                            <button onClick={hideDrawer}>
-                                <AiFillCloseCircle 
-                                     size= {24}
-                                />
-                            </button>
-                        </li>
+                        <ul className="menu p-4 w-64 sm:w-72 md:w-80 h-full bg-zinc-800 text-base-content relative">
+                            <li className='w-fit absolute right-2 z-50'>
+                                <button onClick={hideDrawer}>
+                                    <AiFillCloseCircle 
+                                        size= {24}
+                                    />
+                                </button>
+                            </li>
 
-                        <li>
-                            <Link to="/" >Home</Link>
-                        </li>
-
-                        {isLoggedIn && role === 'ADMIN' && (
                             <li>
-                                <Link to="/admin/dashboard">
-                                    Admin Dashboard
-                                </Link>
+                                <Link to="/" >Home</Link>
                             </li>
-                        )}
 
-                        {isLoggedIn && role === 'ADMIN' && (
+                            {isLoggedIn && role === 'ADMIN' && (
+                                <li>
+                                    <Link to="/admin/dashboard">
+                                        Admin Dashboard
+                                    </Link>
+                                </li>
+                            )}
+
+                            {isLoggedIn && role === 'ADMIN' && (
+                                <li>
+                                    <Link to="/create/course">
+                                        Create new course
+                                    </Link>
+                                </li>
+                            )}
+
                             <li>
-                                <Link to="/create/course">
-                                    Create new course
-                                </Link>
+                                <Link to="/courses" >All Courses</Link>
                             </li>
-                        )}
 
-                        <li>
-                            <Link to="/courses" >All Courses</Link>
-                        </li>
-
-                        <li>
-                            <Link to="/contact" >Contact Us</Link>
-                        </li>
-
-                        <li>
-                            <Link to="/about" >About Us</Link>
-                        </li>
-
-                        {!isLoggedIn && (
-
-                            <li className="absolute bottom-4 w-[90%] ">
-                                <div className="w-full flex items-center gap-2 justify-center">
-                                    <button className='btn-primary bg-fuchsia-600 hover:bg-fuchsia-800 transition-all ease-in-out duration-300  px-3 py-1 font-semibold rounded-md w-full'>
-                                        <Link to="/login">
-                                            Login                  
-                                        </Link>
-                                    </button>
-
-                                    <button className='btn-secondary bg-cyan-600 hover:bg-cyan-800 transition-all ease-in-out duration-300 px-3 py-1 font-semibold rounded-md w-full'>
-                                        <Link to="/signup">
-                                            Signup                  
-                                        </Link>
-                                    </button>
-                                    
-                                </div>
+                            <li>
+                                <Link to="/contact" >Contact Us</Link>
                             </li>
-                        )}
 
-                        {isLoggedIn && (
-
-                            <li className="absolute bottom-4 w-[90%] ">
-                                <div className="w-full flex items-center gap-2 justify-center">
-                                    <button className='btn-primary bg-fuchsia-600 hover:bg-fuchsia-800 transition-all ease-in-out duration-300  px-3 py-1 font-semibold rounded-md w-full'>
-                                        <Link to="/user/profile">
-                                            Profile               
-                                        </Link>
-                                    </button>
-
-                                    <button className='btn-secondary bg-cyan-600 hover:bg-cyan-800 transition-all ease-in-out duration-300 px-3 py-1 font-semibold rounded-md w-full'>
-                                        <Link onClick={handleLogout}>
-                                            Logout                  
-                                        </Link>
-                                    </button>
-                                    
-                                </div>
+                            <li>
+                                <Link to="/about" >About Us</Link>
                             </li>
-                        )}
-                    </ul>
+
+                            {!isLoggedIn && (
+
+                                <li className="absolute bottom-4 w-[90%] ">
+                                    <div className="w-full flex flex-col sm:flex-row items-center gap-2 justify-center">
+                                        <button className='btn-primary bg-fuchsia-600 hover:bg-fuchsia-800 transition-all ease-in-out duration-300  px-3 py-1 font-semibold rounded-md w-full'>
+                                            <Link to="/login">
+                                                Login                  
+                                            </Link>
+                                        </button>
+
+                                        <button className='btn-secondary bg-cyan-600 hover:bg-cyan-800 transition-all ease-in-out duration-300 px-3 py-1 font-semibold rounded-md w-full'>
+                                            <Link to="/signup">
+                                                Signup                  
+                                            </Link>
+                                        </button>
+                                        
+                                    </div>
+                                </li>
+                            )}
+
+                            {isLoggedIn && (
+
+                                <li className="absolute bottom-4 w-[90%] ">
+                                    <div className="w-full flex items-center gap-2 justify-center">
+                                        <button className='btn-primary bg-fuchsia-600 hover:bg-fuchsia-800 transition-all ease-in-out duration-300  px-3 py-1 font-semibold rounded-md w-full'>
+                                            <Link to="/user/profile">
+                                                Profile               
+                                            </Link>
+                                        </button>
+
+                                        <button className='btn-secondary bg-cyan-600 hover:bg-cyan-800 transition-all ease-in-out duration-300 px-3 py-1 font-semibold rounded-md w-full'>
+                                            <Link onClick={handleLogout}>
+                                                Logout                  
+                                            </Link>
+                                        </button>
+                                        
+                                    </div>
+                                </li>
+                            )}
+                        </ul>
+                    </div>
                 </div>
+           <div className="px-4 sm:px-6 md:px-10">
+                { children }
             </div>
 
-            { children }
-
             <Footer />
+        </div>
         </div>
         </>
     )

@@ -21,16 +21,17 @@ const CourseList = () => {
     return(
         <>
             <HomeLayout >
-                <div className="min-h-[90vh] flex flex-col pt-12 pl-20 gap-10 text-white">
+                <div className="min-h-[90vh] flex flex-col pt-8 sm:pt-12 px-4 sm:px-10 md:px-20 gap-8 sm:gap-10 text-white">
 
-                    <h1 className="text-center text-3xl font-semibold mb-5">
+
+                    <h1 className="text-center text-2xl sm:text-3xl font-semibold mb-4 sm:mb-5 px-2">
                         Explore the Courses made by
                         <span className="font-bold text-yellow-500">
                             Industry experts
                         </span>
                     </h1>
                         
-                    <div className="mb-10 flex flex-wrap gap-14">
+                    <div className="mb-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-10">
                         {courseData?.map((element) => {
                             return <CourseCard key={element._id} data={ element }/>
                         })}

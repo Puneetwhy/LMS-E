@@ -8,16 +8,16 @@ const CourseDescription = () => {
 
     return (
         <HomeLayout >
-            <div className="min-h-90[vh] py-12 px-20 flex flex-col items-center justify-center text-white">
-                <div className="grid grid-cols-2 gap-10 py-10 relative">
+            <div className="min-h-[90vh] py-8 sm:py-12 px-4 sm:px-10 md:px-20 flex flex-col items-center justify-center text-white">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10 py-6 md:py-10 relative w-full max-w-[1200px]">
                     <div className="space-y-5">
                         <img 
-                        className="w-full h-64"
+                        className="w-full h-52 sm:h-64 object-cover rounded-md"
                         src={state?.thumbnail?.secure_url} 
                         alt="thumbnail" />
 
                         <div className="space-y-4">
-                            <div className="flex items-center flex-col justify-center text-xl ">
+                            <div className="flex items-center flex-col justify-center text-lg sm:text-xl text-center">
                                 <p className="font-semibold">
                                     <span className="text-yellow-500 font-bold">
                                         Total lectures : {" "} 
@@ -35,11 +35,13 @@ const CourseDescription = () => {
 
                             {
                              role === "ADMIN" || data?.subscription?.status === "active"? (
-                                <button onClick={() => navigate('/course/displaylectures', {state: {...state}})} className="bg-yellow-600 text-xl rounded-md font-bold px-5 py-3 w-full hover:bg-yellow-500 transition-all ease-in-out duration-300">
+                                <button onClick={() => navigate('/course/displaylectures', {state: {...state}})} className="bg-yellow-600 text-lg sm:text-xl rounded-md font-bold px-4 sm:px-5 py-2 sm:py-3 w-full hover:bg-yellow-500 transition-all ease-in-out duration-300"
+                                >
                                     Watch lectures
                                 </button>
                                 ) : (
-                                    <button onClick={() => Navigate("/checkout")} className="bg-yellow-600 text-xl rounded-md font-bold px-5 py-3 w-full hover:bg-yellow-500 transition-all ease-in-out duration-300">
+                                    <button onClick={() => Navigate("/checkout")} className="bg-yellow-600 text-lg sm:text-xl rounded-md font-bold px-4 sm:px-5 py-2 sm:py-3 w-full hover:bg-yellow-500 transition-all ease-in-out duration-300"
+                                    >
                                         Subscribe
                                     </button>
                                 )  
@@ -47,8 +49,9 @@ const CourseDescription = () => {
                         </div>
                     </div>
 
-                    <div className="space-y-2 text-xl">
-                        <h1 className="text-3xl font-bold text-yellow-500 mb-5 text-center ">
+                    <div className="space-y-2 text-lg sm:text-xl">
+                        <h1 className="text-2xl sm:text-3xl font-bold text-yellow-500 mb-4 sm:mb-5 text-center">
+
                             {
                                 state?.title
                             }
