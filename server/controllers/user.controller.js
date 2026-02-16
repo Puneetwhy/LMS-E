@@ -24,7 +24,7 @@ const register = async (req, res, next ) =>{
              return next(new appError('Email already exist', 400));   
       }
 
-      //if user not exist then create it
+     
       const user = await User.create({
             fullName,
             email,
@@ -35,14 +35,14 @@ const register = async (req, res, next ) =>{
             }
       })
 
-      //if user not create properlly
+      
 
       if(!user){
              return next(new appError('User registration failed, please try again', 400));
       }
 
 
-      //file upload 
+    
       if(req.file){
             try{
                   const result = await cloudinary.v2.uploader.upload(req.file.path, {
@@ -57,7 +57,7 @@ const register = async (req, res, next ) =>{
                         user.avatar.public_id = result.public_id;
                         user.avatar.secure_url = result.secure_url;
 
-                        //remove file from local system(server) we will keep only on cloudinary
+                       
                         fs.unlink(req.file.path, (err) => {
                               if (err) console.log("File delete fail:", err.message);
                               else console.log("File deleted");
@@ -70,11 +70,11 @@ const register = async (req, res, next ) =>{
 
       await user.save();
 
-      //below we are sending user informations so we have to make password undefined before sending
+      
       user.password = undefined;
 
 
-      //agar user ne register kar lia hai to to usse dobara log in karane ki koi jarurat nhi hai 
+       
 
       const token = await user.generateJWTToken();
 
@@ -98,7 +98,7 @@ const login = async (req, res, next) => {
 
             const user = await User.findOne({
                         email
-                        }).select('+password'); //hmne password ke select false kiya hai to hme exiplicitly password mangna padega
+                        }).select('+password');
 
 
             if(!user || !(await user.comparePassword(password))){
