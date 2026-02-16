@@ -125,6 +125,7 @@ const Signup = () => {
                             name="fullName"
                             id="fullName"
                             placeholder="Enter your name.."
+                            autocomplete="name"
                             className="bg-transparent px-3 py-2 border rounded-sm focus:outline-none focus:ring-1 focus:ring-yellow-500"
                             onChange={handleUserInput}
                             value={signupData.fullName} />
@@ -141,6 +142,7 @@ const Signup = () => {
                             name="email"
                             id="email"
                             placeholder="Enter your email.."
+                            autocomplete="email"
                             className="bg-transparent px-3 py-2 border rounded-sm focus:outline-none focus:ring-1 focus:ring-yellow-500"
                             onChange={handleUserInput}
                             value={signupData.email} />
@@ -157,6 +159,7 @@ const Signup = () => {
                             name="password"
                             id="password"
                             placeholder="Enter your password.."
+                            autocomplete="new-password"
                             className="bg-transparent px-3 py-2 border rounded-sm focus:outline-none focus:ring-1 focus:ring-yellow-500"
                             onChange={handleUserInput}
                             value={signupData.password} />

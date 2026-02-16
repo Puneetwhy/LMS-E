@@ -78,7 +78,8 @@ const Contact = () => {
                         type="text" 
                         id="name" 
                         name="name"
-                        placeholder="Enter your name..." 
+                        placeholder="Enter your name..."
+                        autocomplete="name" 
                         onChange={ handelInputChange } />
                     </div>
 
@@ -93,6 +94,7 @@ const Contact = () => {
                         id="email" 
                         name="email"
                         placeholder="Enter your email..." 
+                        autocomplete="email"
                         onChange={ handelInputChange }/>
                         
                     </div>
@@ -108,6 +110,7 @@ const Contact = () => {
                         id="message" 
                         name="message"
                         placeholder="Enter your message..." 
+                        autocomplete="off"
                         onChange={ handelInputChange }/>
                     </div>
 
