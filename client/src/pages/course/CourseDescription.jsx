@@ -1,68 +1,86 @@
-import { Navigate, useLocation } from "react-router-dom"
+import { useNavigate, useLocation } from "react-router-dom";
 import HomeLayout from "../../layouts/HomeLayout";
 
 const CourseDescription = () => {
 
-    const {state} = useLocation();
-    const navigate = new Navigate();
+  const { state } = useLocation();
+  const navigate = useNavigate();
 
-    return (
-        <HomeLayout >
-            <div className="min-h-[90vh] py-8 sm:py-12 px-4 sm:px-10 md:px-20 flex flex-col items-center justify-center text-white">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10 py-6 md:py-10 relative w-full max-w-[1200px]">
-                    <div className="space-y-5">
-                        <img 
-                        className="w-full h-52 sm:h-64 object-cover rounded-md"
-                        src={state?.thumbnail?.secure_url} 
-                        alt="thumbnail" />
+  return (
+    <HomeLayout>
+      <div className="min-h-[90vh] py-12 px-5 sm:px-10 lg:px-20 flex items-center justify-center text-white">
 
-                        <div className="space-y-4">
-                            <div className="flex items-center flex-col justify-center text-lg sm:text-xl text-center">
-                                <p className="font-semibold">
-                                    <span className="text-yellow-500 font-bold">
-                                        Total lectures : {" "} 
-                                    </span>
-                                    {state?.numberoflectures}
-                                </p>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 w-full max-w-6xl bg-white/5 backdrop-blur-lg border border-gray-800 rounded-xl p-6 sm:p-10 shadow-lg">
 
-                                <p className="font-semibold">
-                                    <span className="text-yellow-500 font-bold">
-                                        Instructor : {" "} 
-                                    </span>
-                                    {state?.numberoflectures}
-                                </p>
-                            </div>
+          {/* LEFT SIDE */}
+          <div className="space-y-6">
 
-                            {
-                             role === "ADMIN" || data?.subscription?.status === "active"? (
-                                <button onClick={() => navigate('/course/displaylectures', {state: {...state}})} className="bg-yellow-600 text-lg sm:text-xl rounded-md font-bold px-4 sm:px-5 py-2 sm:py-3 w-full hover:bg-yellow-500 transition-all ease-in-out duration-300"
-                                >
-                                    Watch lectures
-                                </button>
-                                ) : (
-                                    <button onClick={() => Navigate("/checkout")} className="bg-yellow-600 text-lg sm:text-xl rounded-md font-bold px-4 sm:px-5 py-2 sm:py-3 w-full hover:bg-yellow-500 transition-all ease-in-out duration-300"
-                                    >
-                                        Subscribe
-                                    </button>
-                                )  
-                            }
-                        </div>
-                    </div>
+            <div className="overflow-hidden rounded-lg">
+              <img
+                className="w-full h-60 sm:h-72 object-cover rounded-lg hover:scale-105 transition duration-500"
+                src={state?.thumbnail?.secure_url}
+                alt="thumbnail"
+              />
+            </div>
 
-                    <div className="space-y-2 text-lg sm:text-xl">
-                        <h1 className="text-2xl sm:text-3xl font-bold text-yellow-500 mb-4 sm:mb-5 text-center">
+            {/* COURSE INFO */}
+            <div className="flex flex-wrap justify-center lg:justify-start gap-4">
 
-                            {
-                                state?.title
-                            }
-                        </h1>
-                        <p className="text-yellow-500">Course description : </p>
-                        <p className="text-white">{state?.description}</p>
-                    </div>
-                </div>
-            </div> 
-        </HomeLayout>
-    )
-}
+              <div className="bg-gray-900 px-4 py-2 rounded-md border border-gray-700">
+                <span className="text-yellow-500 font-semibold">
+                  Lectures:
+                </span>{" "}
+                {state?.numberoflectures}
+              </div>
 
-export default CourseDescription
+              <div className="bg-gray-900 px-4 py-2 rounded-md border border-gray-700">
+                <span className="text-yellow-500 font-semibold">
+                  Instructor:
+                </span>{" "}
+                {state?.createdBy}
+              </div>
+
+            </div>
+
+            {/* BUTTON */}
+            <button
+              onClick={() =>
+                navigate("/course/displaylectures", { state: { ...state } })
+              }
+              className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-black text-lg font-bold py-3 rounded-md hover:scale-105 hover:shadow-lg transition duration-300"
+            >
+              Watch Lectures
+            </button>
+
+          </div>
+
+
+          {/* RIGHT SIDE */}
+          <div className="space-y-6 flex flex-col justify-center">
+
+            <h1 className="text-3xl sm:text-4xl font-bold text-yellow-500 text-center lg:text-left">
+              {state?.title}
+            </h1>
+
+            <div className="space-y-3">
+
+              <p className="text-yellow-500 font-semibold text-lg">
+                Course Description
+              </p>
+
+              <p className="text-gray-300 leading-relaxed text-sm sm:text-base">
+                {state?.description}
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </HomeLayout>
+  );
+};
+
+export default CourseDescription;
