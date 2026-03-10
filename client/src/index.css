@@ -8,3 +8,34 @@ body {
   margin: auto;
   position: relative;
 }
+
+/* Tailwind utilities layer */
+@layer utilities {
+
+  @keyframes spinSlow {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  .spin-slow {
+    animation: spinSlow 40s linear infinite;
+  }
+
+  @keyframes spinReverse {
+    0% {
+      transform: rotate(360deg);
+    }
+    100% {
+      transform: rotate(0deg);
+    }
+  }
+
+  .spin-reverse {
+    animation: spinReverse 50s linear infinite;
+  }
+
+}
