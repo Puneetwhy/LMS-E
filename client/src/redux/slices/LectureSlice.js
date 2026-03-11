@@ -27,7 +27,7 @@ export const addCourseLectures = createAsyncThunk("course/lecture/add", async (d
         formData.append("title", data.title);
         formData.append("description", data.description);
 
-        const response = axiosInstance.post(`/courses/${data.id}`, formData);
+        const response = axiosInstance.post(`/courses/lecture/${data.id}`, formData);
         toast.promise(response, {
             loading:'Addining course lectures',
             success:'Lecture added successfully',
