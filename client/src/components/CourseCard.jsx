@@ -6,38 +6,57 @@ const CourseCard = ({ data }) => {
   return (
     <div
       onClick={() => navigate("/course/description/", { state: { ...data } })}
-      className="text-white w-[22rem] shadow-lg rounded-lg cursor-pointer group overflow-hidden bg-zinc-800 hover:scale-105 transition-transform duration-300"
+      className="w-full max-w-[22rem] bg-zinc-900 rounded-2xl overflow-hidden shadow-lg 
+                 cursor-pointer hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 group"
     >
-      <div className="overflow-hidden">
+      {/* Image */}
+      <div className="h-48 w-full overflow-hidden">
         <img
           src={data?.thumbnail?.secure_url}
           alt={data?.title || "Course Thumbnail"}
-          className="h-48 w-full rounded-t-lg object-cover group-hover:scale-105 transition-transform duration-300"
+          className="h-full w-full object-cover"
         />
+      </div>
 
-        <div className="p-4 space-y-2">
-          <h2 className="text-xl font-bold text-yellow-500 line-clamp-2">
-            {data?.title}
-          </h2>
+      {/* Content */}
+      <div className="p-4 flex flex-col gap-2 text-white w-full min-w-0 overflow-hidden">
+        
+        {/* Title */}
+        <h2 className="text-lg font-semibold text-yellow-400 w-full truncate">
+          {data?.title}
+        </h2>
 
-          <p className="text-gray-300 text-sm line-clamp-2">
-            {data?.description || "No description available."}
-          </p>
+        {/* Description */}
+        <p className="text-gray-400 text-sm w-full overflow-hidden line-clamp-2 break-words">
+          {data?.description || "No description available."}
+        </p>
 
-          <p className="text-sm font-semibold">
-            <span className="text-yellow-500 font-bold">Category: </span>
-            {data?.category || "N/A"}
-          </p>
+        <div className="border-t border-zinc-700 my-2"></div>
 
-          <p className="text-sm font-semibold">
-            <span className="text-yellow-500 font-bold">Total lectures: </span>
-            {data?.numberOfLectures ?? 0}
-          </p>
+        {/* Info */}
+        <div className="text-sm space-y-2 w-full">
+          
+          <div className="flex w-full items-center gap-2 min-w-0">
+            <span className="text-gray-400 shrink-0">Category:</span>
+            <span className="text-white truncate min-w-0">
+              {data?.category || "N/A"}
+            </span>
+          </div>
 
-          <p className="text-sm font-semibold">
-            <span className="text-yellow-500 font-bold">Instructor: </span>
-            {data?.createdBy || "N/A"}
-          </p>
+          <div className="flex w-full items-center gap-2 min-w-0">
+            <span className="text-gray-400 shrink-0">Lectures:</span>
+            <span className="text-white">
+              {data?.numberOfLectures ?? 0}
+            </span>
+          </div>
+
+          <div className="flex w-full items-center gap-2 min-w-0">
+            <span className="text-gray-400 shrink-0">Instructor:</span>
+            <span className="text-white truncate min-w-0">
+              {data?.createdBy || "N/A"}
+            </span>
+          </div>
+
         </div>
       </div>
     </div>

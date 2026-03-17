@@ -30,7 +30,7 @@ const CourseDescription = () => {
                 <span className="text-yellow-500 font-semibold">
                   Lectures:
                 </span>{" "}
-                {state?.numberoflectures}
+                {state?.numberOfLectures ?? 0}
               </div>
 
               <div className="bg-gray-900 px-4 py-2 rounded-md border border-gray-700">

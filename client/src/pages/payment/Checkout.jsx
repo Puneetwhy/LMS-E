@@ -1,117 +1,134 @@
-import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux"
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { getRazorPayId, purchaseCourseBundle, verifyUserPayment } from "../../redux/slices/RazorpaySlice";
+import {
+  getRazorPayId,
+  purchaseCourseBundle,
+  verifyUserPayment,
+} from "../../redux/slices/RazorpaySlice";
 import HomeLayout from "../../layouts/HomeLayout";
 import toast from "react-hot-toast";
-import { FaRupeeSign } from "react-icons/fa"
+import { FaRupeeSign } from "react-icons/fa";
 
 const Checkout = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
-    const dispatch = useDispatch();
-    const navigate = useNavigate();
-    const razorpayKey = useSelector((state) => state?.razorpay?.key);
-    const subscription_id = useSelector((state) => state?.razorpay?.subscription_id);
-    const isPaymentVerified  = useSelector((state) => state?.razorpay?.isPaymentVerified);
-    const userData = useSelector((state) => state?.auth?.data);
-    const paymentDetails = {
-        razorpay_payment_id: "",
-        razorpay_subscription_id: "",
-        razorpay_signature: ""
+  const razorpayKey = useSelector((state) => state?.razorpay?.key);
+  const subscription_id = useSelector(
+    (state) => state?.razorpay?.subscription_id
+  );
+  const userData = useSelector((state) => state?.auth?.data);
+
+  async function handleSubscription(e) {
+    e.preventDefault();
+
+    if (!window.Razorpay) {
+      toast.error("Payment gateway not loaded");
+      return;
     }
 
-    async function handleSubscription(e) {
-        e.preventDefault();
-        if(!razorpayKey || !subscription_id){
-            console.log("KEY:", razorpayKey);
-            console.log("SUBSCRIPTION:", subscription_id);
-            console.log("USER:", userData);
+    if (!razorpayKey || !subscription_id) {
+      toast.error("Something went wrong");
+      return;
+    }
 
-            toast.error("Something went wrong");
-            return;
-        }        
+    setLoading(true);
 
-        const options = {
-            key: razorpayKey,
-            subscription_id: subscription_id,
-            name: "Coursify pvt. Ltd",
-            description: "Subscription",
-            theme : {
-                color: "#F37254"
-            },
-            prefill: {
-                email: userData.email,
-                name : userData.fullName
-            },
+    const options = {
+      key: razorpayKey,
+      subscription_id: subscription_id,
+      name: "CollabCodex",
+      description: "Pro Subscription",
+      theme: {
+        color: "#F59E0B",
+      },
+      prefill: {
+        email: userData?.email,
+        name: userData?.fullName,
+      },
 
-            handler: async function (response) {
-                paymentDetails.razorpay_payment_id = response.razorpay_payment_id;
-                paymentDetails.razorpay_signature = response.razorpay_signature;
-                paymentDetails.razorpay_subscription_id = response.razorpay_subscription_id;
+      handler: async function (response) {
+        const res = await dispatch(verifyUserPayment(response));
 
-                const res = await dispatch(verifyUserPayment(paymentDetails));
-
-                if (res?.payload?.success) {
-                    navigate("/checkout/success");
-                } else {
-                    navigate("/checkout/fail");
-                }
-            }
+        if (res?.payload?.success) {
+          navigate("/checkout/success");
+        } else {
+          navigate("/checkout/fail");
         }
+      },
 
-        const paymentObject = new window.Razorpay(options);
-        paymentObject.open();
-    }
+      modal: {
+        ondismiss: () => {
+          setLoading(false);
+          toast.error("Payment cancelled");
+        },
+      },
+    };
 
-    async function load() {
-        await dispatch(getRazorPayId());
-        await dispatch(purchaseCourseBundle());
-    }
+    const rzp = new window.Razorpay(options);
+    rzp.open();
+    setLoading(false);
+  }
 
-    useEffect(() => {
-        load();
-    }, []);
+  async function load() {
+    await dispatch(getRazorPayId());
+    await dispatch(purchaseCourseBundle());
+  }
+
+  useEffect(() => {
+    load();
+  }, [dispatch]);
 
   return (
     <HomeLayout>
-        <form 
-            onSubmit={handleSubscription}
-            className="flex min-h-screen items-center justify-center text-white px-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-black to-gray-950 text-white px-4">
 
-                <div className="flex flex-col w-full max-w-md shadow-[0_0_10px_black] items-center justify-center min-h-[26rem] rounded-lg relative p-6"
->
+        <form
+          onSubmit={handleSubscription}
+          className="w-full max-w-md backdrop-blur-lg bg-white/5 border border-gray-700 rounded-2xl shadow-xl p-8 text-center"
+        >
+          {/* Title */}
+          <h1 className="text-2xl font-bold text-yellow-400 mb-4">
+            Pro Subscription
+          </h1>
 
-                    <h1 className="bg-yellow-500 text-center rounded-t-lg text-lg sm:text-xl font-semibold absolute top-0 w-full py-4">Subscription Bundle</h1>
+          {/* Description */}
+          <p className="text-gray-300 text-sm mb-4">
+            Unlock all courses with 1-year access. Learn without limits 🚀
+          </p>
 
-                    <div className="flex space-y-4 flex-col items-center text-center">
-                        <p className="text-sm sm:text-base">
-                            This purchase will allow you to access all available courses
-                            of our plateform {" "}
-                            <span className="text-yellow-500 font-bold">
-                                <br />
-                                1 Year duration {" "}
-                            </span>
-                            All the existing and new launch courses will be also available
-                        </p>
+          {/* Price */}
+          <div className="flex items-center justify-center text-3xl font-bold mb-4">
+            <FaRupeeSign className="text-yellow-400" />
+            <span className="text-orange-400 ml-1">499</span>
+          </div>
 
-                        <p className="flex items-center justify-center gap-1 text-xl sm:text-2xl font-bold">
-                            <FaRupeeSign className="text-yellow-500"/><span className="text-orange-500">499</span>only
-                        </p>
+          {/* Features */}
+          <div className="text-gray-400 text-sm space-y-1 mb-6">
+            <p>✔ Full course access</p>
+            <p>✔ New courses included</p>
+            <p>✔ 1 Year validity</p>
+          </div>
 
-                        <div className="text-gray-400">
-                            <p>100% refund on cancellation</p>
-                            <p>* Terms and conditions applied</p>
-                        </div>
+          {/* Button */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3 rounded-lg font-semibold bg-gradient-to-r from-yellow-500 to-orange-500 hover:scale-105 transition-all duration-300 shadow-lg disabled:opacity-50"
+          >
+            {loading ? "Processing..." : "Buy Now"}
+          </button>
 
-                        <button type="submit" className="mt-6 w-full sm:w-2/3 font-bold text-lg sm:text-xl py-2 bg-yellow-600 hover:bg-yellow-500 hover:text-cyan-700 transition-all duration-300 rounded-lg">
-                            Buy now
-                        </button>
-                    </div>
-                </div>
-
+          {/* Footer note */}
+          <p className="text-xs text-gray-500 mt-4">
+            100% refund on cancellation • T&C apply
+          </p>
         </form>
+      </div>
     </HomeLayout>
-  )
-} 
+  );
+};
 
-export default Checkout
+export default Checkout;

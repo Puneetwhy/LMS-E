@@ -18,10 +18,11 @@ const CourseList = () => {
 
         {/* PAGE HEADER */}
         <div className="text-center max-w-3xl mx-auto mb-14">
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight">
-            Explore Courses by
-            <span className="text-yellow-500"> Industry Experts</span>
-          </h1>
+          <h5 className="text-2xl sm:text-4xl lg:text-5xl font-bold leading-tight">
+            Explore Courses by 
+            {" "}
+            <span className="text-yellow-500">Experts</span>
+          </h5>
           <p className="text-gray-400 mt-4 text-sm sm:text-base">
             Learn from experienced instructors and upgrade your skills with
             practical industry-level courses.

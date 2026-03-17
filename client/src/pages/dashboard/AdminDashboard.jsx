@@ -69,154 +69,147 @@ const AdminDashboard = () => {
 
   return (
     <HomeLayout>
-        <div className="min-h-[90vh] flex pt-6 sm:pt-10 flex-col text-white items-center px-4 sm:px-8">
-          <h1 className="text-center text-3xl sm:text-4xl md:text-5xl font-semibold text-yellow-500">
-            Admin Dashboard
-          </h1>
+  <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-950 text-white px-6 py-10">
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full max-w-[1200px] mx-auto">
-            <div className="flex flex-col items-center gap-10 p-5 shadow-lg rounded-md">
-                <div className="w-60 h-60 sm:w-72 sm:h-72 md:w-80 md:h-80">
-                  <Pie data={userData} />
-                </div>
+    {/* Title */}
+    <h1 className="text-4xl font-bold text-center text-yellow-400 mb-10">
+      Admin Dashboard
+    </h1>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 w-full">
-                  <div className="flex items-center justify-between p-5 gap-5 rounded-md shadow-md">
-                    <div className="flex flex-col items-center">
-                      <p className="font-semibold">
-                        Registered Users
-                      </p>
-                      <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold">
-                        {allUserCount}
-                      </h3>
-                    </div>
-                    <FaUsers className="text-yellow-500 text-3xl sm:text-4xl md:text-5xl"/>
-                  </div>
+    {/* Top Stats Cards */}
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
 
-                  <div className="flex items-center justify-between p-5 gap-5 rounded-md shadow-md">
-                    <div className="flex flex-col items-center">
-                      <p className="font-semibold">
-                        Subscribed Users
-                      </p>
-                      <h3 className="text-4xl font-bold ">
-                        {subscribedCount}
-                      </h3>
-                    </div>
-                    <FaUsers className="text-green-500 text-3xl sm:text-4xl md:text-5xl"
-/>
-                  </div>
-                </div>
-            </div>  
-
-            <div className="flex flex-col items-center gap-10 p-5 shadow-lg rounded-md">
-              <div className="h-64 sm:h-72 md:h-80 w-full relative">
-                <Bar data={salesData}
-                  className="absolute bottom-0 h-full w-full"/>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 w-full">
-                 <div className="flex items-center justify-between p-5 gap-5 rounded-md shadow-md">
-                    <div className="flex flex-col items-center">
-                      <p className="font-semibold">
-                        Subscription Count
-                      </p>
-                      <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold">
-                        {allPayments?.count}
-                      </h3>
-                    </div>
-                    <FcSalesPerformance className="text-green-500 text-3xl sm:text-4xl md:text-5xl"/>
-                  </div>
-
-                  <div className="flex items-center justify-between p-5 gap-5 rounded-md shadow-md">
-                    <div className="flex flex-col items-center">
-                      <p className="font-semibold">
-                        Total Revenue
-                      </p>
-                      <h3 className="text-4xl font-bold ">
-                        {(allPayments?.count || 0) * 499}
-                      </h3>
-                    </div>
-                    <GiMoneyStack className="text-green-500 text-5xl "/>
-                  </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="w-full max-w-[1200px] flex flex-col items-center justify-center gap-8 sm:gap-10 mb-10 px-4">
-
-            <div className="flex w-full items-center justify-between">
-              <h1 className="text-center text-3xl font-semibold">Courses Overview</h1>
-
-              <button onClick={() => {
-                navigate("/course/create")
-              }}
-              className="w-fit bg-yellow-500 hover:bg-yellow-600 transition-all ease-in-out duration-300 rounded-md py-2 px-4 font-semibold text-sm sm:text-lg cursor-pointer">
-                  Create new course
-              </button>
-            </div>
-
-            <div className="w-full overflow-x-auto">
-              <table className="table min-w-[900px]">
-                <thead>
-                  <tr>
-                    <th>S No.</th>
-                    <th>Course Title</th>
-                    <th>Course Category</th>
-                    <th>Instructor</th>
-                    <th>Total Lectures</th>
-                    <th>Description</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {myCourses.map((course, idx) => {
-                    return(
-                      <tr key={course._id}>
-
-                        <td>{idx + 1}</td>
-                        <td><textarea readOnly value={course?.title} className="w-40 h-auto bg-transparent resize-none"></textarea>
-                        </td>
-                        <td>
-                          {course?.category}
-                        </td>
-
-                        <td>
-                          {course?.createdBy}
-                        </td>
-
-                        <td>{course?.nooflectures}</td>
-
-                        <td className="max-w-28 overflow-hidden text-ellipsis whitespace-nowrap">
-                          <textarea 
-                            value={course?.description}
-                            readOnly
-                            className="w-80 h-auto bg-transparent resize-none"></textarea>
-                        </td>
-
-                        <td className="flex items-center gap-4 ">
-                          <button 
-                          className="bg-green-500 hover:bg-green-600 transition-all ease-in-out duration-300 text-xl py-2 px-4 rounded-md font-bold"
-                          onClick={() => {
-                            navigate("/course/displaylectures", {state: {course}}
-                            )
-                          }}>
-                            <BsCollectionPlayFill /> 
-                          </button>
-
-                          <button 
-                          className="bg-red-500 hover:bg-red-600 transition-all ease-in-out duration-300 text-xl py-2 px-4 rounded-md font-bold"
-                          onClick={() => onCourseDelete(course?._id)}>
-                            <BsTrash /> 
-                          </button>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-            </table>
-          </div>
-          </div>
+      <div className="p-6 rounded-xl bg-white/5 backdrop-blur-lg border border-gray-700 shadow-lg flex justify-between items-center">
+        <div>
+          <p className="text-gray-400">Users</p>
+          <h2 className="text-2xl font-bold">{allUserCount}</h2>
         </div>
-    </HomeLayout>
+        <FaUsers className="text-yellow-400 text-3xl" />
+      </div>
+
+      <div className="p-6 rounded-xl bg-white/5 backdrop-blur-lg border border-gray-700 shadow-lg flex justify-between items-center">
+        <div>
+          <p className="text-gray-400">Subscribers</p>
+          <h2 className="text-2xl font-bold">{subscribedCount}</h2>
+        </div>
+        <FaUsers className="text-green-400 text-3xl" />
+      </div>
+
+      <div className="p-6 rounded-xl bg-white/5 backdrop-blur-lg border border-gray-700 shadow-lg flex justify-between items-center">
+        <div>
+          <p className="text-gray-400">Sales</p>
+          <h2 className="text-2xl font-bold">{allPayments?.count}</h2>
+        </div>
+        <FcSalesPerformance className="text-3xl" />
+      </div>
+
+      <div className="p-6 rounded-xl bg-white/5 backdrop-blur-lg border border-gray-700 shadow-lg flex justify-between items-center">
+        <div>
+          <p className="text-gray-400">Revenue</p>
+          <h2 className="text-2xl font-bold">
+            ₹{(allPayments?.count || 0) * 499}
+          </h2>
+        </div>
+        <GiMoneyStack className="text-green-400 text-3xl" />
+      </div>
+
+    </div>
+
+    {/* Charts Section */}
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+
+      {/* Pie */}
+      <div className="bg-white/5 backdrop-blur-lg border border-gray-700 rounded-xl p-6 shadow-lg">
+        <h2 className="text-lg font-semibold mb-4 text-gray-300">
+          User Distribution
+        </h2>
+        <div className="h-64 flex justify-center">
+          <Pie data={userData} />
+        </div>
+      </div>
+
+      {/* Bar */}
+      <div className="bg-white/5 backdrop-blur-lg border border-gray-700 rounded-xl p-6 shadow-lg">
+        <h2 className="text-lg font-semibold mb-4 text-gray-300">
+          Monthly Sales
+        </h2>
+        <div className="h-64">
+          <Bar data={salesData} />
+        </div>
+      </div>
+
+    </div>
+
+    {/* Courses Section */}
+    <div className="bg-white/5 backdrop-blur-lg border border-gray-700 rounded-xl p-6 shadow-lg">
+
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-semibold">Courses</h2>
+
+        <button
+          onClick={() => navigate("/create/course")}
+          className="bg-yellow-500 hover:bg-yellow-600 px-4 py-2 rounded-lg font-semibold transition-all"
+        >
+          + Create Course
+        </button>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm text-left border-collapse">
+
+          <thead>
+            <tr className="text-gray-400 border-b border-gray-700">
+              <th className="py-3">#</th>
+              <th>Title</th>
+              <th>Category</th>
+              <th>Instructor</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {myCourses.map((course, idx) => (
+              <tr
+                key={course._id}
+                className="border-b border-gray-800 hover:bg-white/5 transition"
+              >
+                <td className="py-3">{idx + 1}</td>
+
+                <td className="max-w-[150px] truncate">
+                  {course.title}
+                </td>
+
+                <td>{course.category}</td>
+                <td>{course.createdBy}</td>
+                <td className="flex gap-3 py-2">
+
+                  <button
+                    className="bg-green-500 hover:bg-green-600 p-2 rounded-md"
+                    onClick={() => {
+                    navigate("course/displaylectures")
+                  }}
+                  >
+                    <BsCollectionPlayFill />
+                  </button>
+
+                  <button
+                    className="bg-red-500 hover:bg-red-600 p-2 rounded-md"
+                    onClick={() => onCourseDelete(course._id)}
+                  >
+                    <BsTrash />
+                  </button>
+
+                </td>
+              </tr>
+            ))}
+          </tbody>
+
+        </table>
+      </div>
+    </div>
+
+  </div>
+</HomeLayout>
   )
 }
 
