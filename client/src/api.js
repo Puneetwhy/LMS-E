@@ -1,8 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: "lms-e-sdzj.vercel.app"
-
+  baseURL: 'https://lms-e.onrender.com' 
 });
 
 export default api;
