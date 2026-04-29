@@ -7,8 +7,30 @@ import app from './app.js';
 import connectionToDB from './config/dbConnection.js';
 
 
-const PORT  = process.env.PORT || 5000;
+// const PORT  = process.env.PORT || 5000;
 
+let isConnected = false;
+
+async function connectToMongoDB() {
+  try {
+    await mongoose.connect(process.env.MONGO_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true
+    });
+    isConnected = true;
+    console.log('Connected to MongoDB');
+  } catch (error) {
+    console.error('Error connecting to MongoDB:', error);
+  }
+}
+
+
+app.use((req, res, next) => {
+      if(!isConnected){
+            connectToMongoDB();
+      }
+      next();
+})
 //CLOUDINARY configuration
 v2.config({
       cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -21,8 +43,9 @@ export const razorpay = new Razorpay({
       key_secret: process.env.RAZORPAY_SECRET
 })
 
-app.listen(PORT, async() => {
-      await connectionToDB();
-      console.log(`App is running at http:localhost:${PORT}`);
-})
+// app.listen(PORT, async() => {
+//       await connectionToDB();
+//       console.log(`App is running at http:localhost:${PORT}`);
+// })
 
+module.exports = app;
