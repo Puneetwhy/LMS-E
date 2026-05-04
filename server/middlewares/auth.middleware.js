@@ -2,13 +2,18 @@ import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
 import appError from "../utils/error.util.js";
 
+// ================= AUTH MIDDLEWARE =================
 export const isLoggedIn = async (req, res, next) => {
   try {
-    let token;
+    let token = null;
 
+    // 1. From cookies
     if (req.cookies?.token) {
       token = req.cookies.token;
-    } else if (req.headers.authorization?.startsWith("Bearer")) {
+    }
+
+    // 2. From headers (Bearer token)
+    if (!token && req.headers.authorization?.startsWith("Bearer ")) {
       token = req.headers.authorization.split(" ")[1];
     }
 
@@ -16,33 +21,46 @@ export const isLoggedIn = async (req, res, next) => {
       return next(new appError("Unauthenticated, please login again", 401));
     }
 
+    // 🔥 ENV safety
+    if (!process.env.JWT_SECRET) {
+      return next(new appError("JWT secret not configured", 500));
+    }
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    const userId = decoded.id || decoded._id;
-
-    const user = await User.findById(userId);
+    const user = await User.findById(decoded.id).select("-password");
 
     if (!user) {
       return next(new appError("User not found", 401));
     }
 
     req.user = user;
+
     next();
   } catch (error) {
-    return next(new appError("Invalid or expired token, please login again", 401));
+    return next(
+      new appError("Invalid or expired token, please login again", 401)
+    );
   }
 };
 
+// ================= ROLE AUTH =================
 export const authorizedRoles = (...roles) => {
   return (req, res, next) => {
-    if (!req.user) {
-      return next(new appError("Unauthorized access", 401));
-    }
+    try {
+      if (!req.user) {
+        return next(new appError("Unauthorized access", 401));
+      }
 
-    if (!roles.includes(req.user.role)) {
-      return next(new appError("You are not allowed to access this route", 403));
-    }
+      if (!roles.includes(req.user.role)) {
+        return next(
+          new appError("You are not allowed to access this route", 403)
+        );
+      }
 
-    next();
+      next();
+    } catch (error) {
+      return next(new appError("Authorization failed", 500));
+    }
   };
 };

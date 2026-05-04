@@ -6,78 +6,87 @@ const initialState = {
   key: "",
   subscription_id: "",
   isPaymentVerified: false,
-  allPayments: {},
+  allPayments: { count: 0 },
   finalMonths: {},
   monthlySalesRecord: [],
+  isLoading: false,
+  error: null,
 };
 
-// ================= KEY =================
+// ================= RAZORPAY KEY =================
 export const getRazorPayId = createAsyncThunk(
   "razorpay/key",
-  async (_, thunkAPI) => {
+  async (_, { rejectWithValue }) => {
     try {
-      const res = await axiosInstance.get("/payments/razorpay-key");
-      return res.data;
+      const res = await axiosInstance.get("/api/v1/payments/razorpay-key");
+      return res?.data;
     } catch (err) {
-      return thunkAPI.rejectWithValue(err);
+      const message = err?.response?.data?.message || "Failed to get Razorpay key";
+      toast.error(message);
+      return rejectWithValue(message);
     }
   }
 );
 
-// ================= SUBSCRIBE =================
+// ================= CREATE SUBSCRIPTION =================
 export const purchaseCourseBundle = createAsyncThunk(
   "razorpay/subscribe",
-  async (_, thunkAPI) => {
+  async (_, { rejectWithValue }) => {
     try {
-      const res = await axiosInstance.post("/payments/subscribe");
-      return res.data;
+      const res = await axiosInstance.post("/api/v1/payments/subscribe");
+      return res?.data;
     } catch (err) {
-      return thunkAPI.rejectWithValue(err);
+      const message = err?.response?.data?.message || "Subscription failed";
+      toast.error(message);
+      return rejectWithValue(message);
     }
   }
 );
 
-// ================= VERIFY =================
+// ================= VERIFY PAYMENT =================
 export const verifyUserPayment = createAsyncThunk(
   "razorpay/verify",
-  async (data, thunkAPI) => {
+  async (data, { rejectWithValue }) => {
     try {
-      const res = await axiosInstance.post("/payments/verify", data);
-      return res.data;
+      const res = await axiosInstance.post("/api/v1/payments/verify", data);
+      return res?.data;
     } catch (err) {
-      return thunkAPI.rejectWithValue(err);
+      const message = err?.response?.data?.message || "Verification failed";
+      toast.error(message);
+      return rejectWithValue(message);
     }
   }
 );
 
-// ================= CANCEL =================
+// ================= CANCEL SUBSCRIPTION =================
 export const cancelCourseBundle = createAsyncThunk(
   "razorpay/cancel",
-  async (_, thunkAPI) => {
+  async (_, { rejectWithValue }) => {
     try {
-      const res = await axiosInstance.post("/payments/unsubscribe");
-      toast.success(res.data.message);
-      return res.data;
+      const res = await axiosInstance.post("/api/v1/payments/unsubscribe");
+      toast.success(res?.data?.message || "Subscription cancelled");
+      return res?.data;
     } catch (err) {
-      return thunkAPI.rejectWithValue(err);
+      const message = err?.response?.data?.message || "Cancel failed";
+      toast.error(message);
+      return rejectWithValue(message);
     }
   }
 );
 
-// ================= RECORD =================
+// ================= GET PAYMENT RECORDS (ADMIN) =================
 export const getPaymentRecord = createAsyncThunk(
   "razorpay/record",
-  async (_, thunkAPI) => {
+  async (_, { rejectWithValue }) => {
     try {
-      const res = await axiosInstance.get("/payments?count=100");
-      return res.data;
+      const res = await axiosInstance.get("/api/v1/payments?count=100");
+      return res?.data;
     } catch (err) {
-      return thunkAPI.rejectWithValue(err);
+      return rejectWithValue(err?.response?.data?.message || "Failed to fetch records");
     }
   }
 );
 
-// ================= SLICE =================
 const razorpaySlice = createSlice({
   name: "razorpay",
   initialState,
@@ -85,18 +94,20 @@ const razorpaySlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(getRazorPayId.fulfilled, (state, action) => {
-        state.key = action.payload.key;
+        state.key = action.payload?.key || "";
       })
       .addCase(purchaseCourseBundle.fulfilled, (state, action) => {
-        state.subscription_id = action.payload.subscription_id;
+        state.subscription_id = action.payload?.subscription_id || "";
       })
       .addCase(verifyUserPayment.fulfilled, (state, action) => {
-        state.isPaymentVerified = action.payload.success;
+        state.isPaymentVerified = action.payload?.success || false;
       })
       .addCase(getPaymentRecord.fulfilled, (state, action) => {
-        state.allPayments = action.payload.allPayments;
-        state.finalMonths = action.payload.finalMonths;
-        state.monthlySalesRecord = action.payload.monthlySalesRecord;
+        state.allPayments = action.payload?.allPayments || { count: 0 };
+        state.finalMonths = action.payload?.finalMonths || {};
+        state.monthlySalesRecord = Array.isArray(action.payload?.monthlySalesRecord)
+          ? action.payload.monthlySalesRecord
+          : new Array(12).fill(0);
       });
   },
 });

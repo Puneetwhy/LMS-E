@@ -1,18 +1,26 @@
-import { Router } from 'express';
+import { Router } from "express";
 
 import {
-    contactUs,
-    userStats,
-} from '../controllers/miscellaneous.controller.js';
+  contactUs,
+  userStats,
+} from "../controllers/miscellaneous.controller.js";
 
-import { authorizedRoles, isLoggedIn } from '../middlewares/auth.middleware.js';
+import {
+  authorizedRoles,
+  isLoggedIn,
+} from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
-router.route('/').post(contactUs);
+// ================= CONTACT =================
+router.post("/", contactUs);
 
-router
-    .route('/admin/stats/users')
-    .get(isLoggedIn, authorizedRoles('ADMIN'), userStats);
+// ================= ADMIN USER STATS =================
+router.get(
+  "/admin/stats/users",
+  isLoggedIn,
+  authorizedRoles("ADMIN"),
+  userStats
+);
 
 export default router;

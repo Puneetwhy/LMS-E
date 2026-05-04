@@ -1,4 +1,4 @@
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import HomeLayout from "../../layouts/HomeLayout";
 import { useDispatch } from "react-redux";
 import { useEffect, useState } from "react";
@@ -8,10 +8,13 @@ import { AiOutlineArrowLeft } from "react-icons/ai";
 
 const AddLecture = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { id } = useParams(); // 🔥 fallback support
+
   const courseDetails = location.state;
 
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [userInput, setUserInput] = useState({
     id: "",
@@ -21,17 +24,29 @@ const AddLecture = () => {
     videoSrc: "",
   });
 
+  // 🔥 SAFE INIT (Render + refresh safe)
   useEffect(() => {
-    if (!courseDetails) {
+    const courseId = courseDetails?._id || id;
+
+    if (!courseId) {
       navigate("/courses");
       return;
     }
 
     setUserInput((prev) => ({
       ...prev,
-      id: courseDetails._id,
+      id: courseId,
     }));
-  }, [courseDetails]);
+  }, [courseDetails, id, navigate]);
+
+  // 🔥 CLEANUP (memory leak fix)
+  useEffect(() => {
+    return () => {
+      if (userInput.videoSrc) {
+        URL.revokeObjectURL(userInput.videoSrc);
+      }
+    };
+  }, [userInput.videoSrc]);
 
   function handleInputChange(e) {
     const { name, value } = e.target;
@@ -41,10 +56,22 @@ const AddLecture = () => {
     }));
   }
 
+  // 🔥 VIDEO HANDLER (safe)
   function handleVideo(e) {
-    const video = e.target.files[0];
+    const video = e.target.files?.[0];
 
     if (!video) return;
+
+    // 🔴 FILE VALIDATION
+    if (video.size > 50 * 1024 * 1024) {
+      toast.error("Video size should be less than 50MB");
+      return;
+    }
+
+    if (!video.type.startsWith("video/")) {
+      toast.error("Only video files are allowed");
+      return;
+    }
 
     const source = URL.createObjectURL(video);
 
@@ -55,8 +82,11 @@ const AddLecture = () => {
     }));
   }
 
+  // 🔥 SUBMIT HANDLER
   async function onFormSubmit(e) {
     e.preventDefault();
+
+    if (isSubmitting) return;
 
     if (!userInput.id) {
       toast.error("Course ID missing");
@@ -68,21 +98,32 @@ const AddLecture = () => {
       return;
     }
 
-    const response = await dispatch(addCourseLectures(userInput));
+    try {
+      setIsSubmitting(true);
 
-    if (response?.payload?.success) {
-      toast.success("Lecture added");
+      const response = await dispatch(addCourseLectures(userInput));
 
-      // 🔥 RESET
-      setUserInput({
-        id: courseDetails?._id,
-        lecture: undefined,
-        title: "",
-        description: "",
-        videoSrc: "",
-      });
+      if (response?.payload?.success) {
+        toast.success("Lecture added");
 
-      navigate(`/course/displaylectures/${courseDetails._id}`);
+        setUserInput((prev) => ({
+          ...prev,
+          lecture: undefined,
+          title: "",
+          description: "",
+          videoSrc: "",
+        }));
+
+        navigate("/course/displaylectures", {
+          state: { courseId: userInput.id },
+        });
+      } else {
+        toast.error(response?.payload?.message || "Failed to add lecture");
+      }
+    } catch (error) {
+      toast.error("Something went wrong");
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -106,7 +147,6 @@ const AddLecture = () => {
 
           <form onSubmit={onFormSubmit} className="flex flex-col gap-4">
 
-            {/* TITLE */}
             <input
               type="text"
               name="title"
@@ -116,7 +156,6 @@ const AddLecture = () => {
               className="w-full px-4 py-2 rounded-lg border border-gray-600 bg-transparent text-white placeholder-gray-400 focus:outline-none focus:border-yellow-500"
             />
 
-            {/* DESCRIPTION */}
             <textarea
               name="description"
               placeholder="Enter lecture description"
@@ -125,7 +164,6 @@ const AddLecture = () => {
               className="w-full px-4 py-2 rounded-lg border border-gray-600 bg-transparent text-white placeholder-gray-400 resize-none h-28 focus:outline-none focus:border-yellow-500"
             />
 
-            {/* VIDEO */}
             {userInput.videoSrc ? (
               <video
                 muted
@@ -153,12 +191,12 @@ const AddLecture = () => {
               </label>
             )}
 
-            {/* BUTTON */}
             <button
               type="submit"
-              className="w-full py-3 bg-yellow-500 text-black font-semibold rounded-lg hover:scale-105"
+              disabled={isSubmitting}
+              className="w-full py-3 bg-yellow-500 text-black font-semibold rounded-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Add Lecture
+              {isSubmitting ? "Adding..." : "Add Lecture"}
             </button>
 
           </form>

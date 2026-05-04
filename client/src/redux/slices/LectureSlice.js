@@ -3,98 +3,142 @@ import axiosInstance from "../../helpers/axiosInstance";
 import toast from "react-hot-toast";
 
 const initialState = {
-  lectures: []
+  lectures: [],
+  isLoading: false,
+  error: null
 };
 
-// ================= GET LECTURES =================
 export const getCourseLectures = createAsyncThunk(
   "course/lecture/get",
-  async (cid, thunkAPI) => {
+  async (cid, { rejectWithValue }) => {
     try {
-      const response = axiosInstance.get(`/courses/${cid}/lectures`, {
-        withCredentials: true
-      });
+      const promise = axiosInstance.get(`/courses/${cid}/lectures`);
 
-      toast.promise(response, {
+      toast.promise(promise, {
         loading: "Fetching course lectures",
-        success: "Lecture fetched successfully",
-        error: "Failed to load the lectures"
+        success: (res) => res?.data?.message || "Lectures loaded",
+        error: "Failed to load lectures"
       });
 
-      return (await response).data;
+      const res = await promise;
+
+      return Array.isArray(res?.data?.lectures)
+        ? res.data.lectures
+        : [];
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Error");
-      return thunkAPI.rejectWithValue(error);
+      const message =
+        error?.response?.data?.message || "Error fetching lectures";
+      toast.error(message);
+      return rejectWithValue(message);
     }
   }
 );
 
-// ================= ADD LECTURE =================
 export const addCourseLectures = createAsyncThunk(
   "course/lecture/add",
-  async (data, thunkAPI) => {
+  async (data, { rejectWithValue }) => {
     try {
       const formData = new FormData();
       formData.append("lecture", data.lecture);
       formData.append("title", data.title);
       formData.append("description", data.description);
 
-      const response = axiosInstance.post(
+      const promise = axiosInstance.post(
         `/courses/${data.id}/lecture`,
         formData,
-        { withCredentials: true }
+        { headers: { "Content-Type": "multipart/form-data" } }
       );
 
-      toast.promise(response, {
+      toast.promise(promise, {
         loading: "Adding lecture",
-        success: "Lecture added successfully",
+        success: (res) => res?.data?.message || "Lecture added",
         error: "Failed to add lecture"
       });
 
-      return (await response).data;
+      const res = await promise;
+
+      return Array.isArray(res?.data?.course?.lectures)
+        ? res.data.course.lectures
+        : [];
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Error");
-      return thunkAPI.rejectWithValue(error);
+      const message =
+        error?.response?.data?.message || "Error adding lecture";
+      toast.error(message);
+      return rejectWithValue(message);
     }
   }
 );
 
-// ================= DELETE LECTURE =================
 export const deleteCourseLectures = createAsyncThunk(
   "course/lecture/delete",
-  async (data, thunkAPI) => {
+  async ({ courseId, lectureId }, { rejectWithValue }) => {
     try {
-      const response = axiosInstance.delete(
-        `/courses/${data.courseId}/lecture/${data.lectureId}`, 
-        { withCredentials: true }
+      const promise = axiosInstance.delete(
+        `/courses/${courseId}/lecture/${lectureId}`
       );
 
-      toast.promise(response, {
+      toast.promise(promise, {
         loading: "Deleting lecture",
-        success: "Lecture deleted successfully",
+        success: (res) => res?.data?.message || "Lecture deleted",
         error: "Failed to delete lecture"
       });
 
-      return (await response).data;
+      await promise;
+
+      return lectureId;
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Error");
-      return thunkAPI.rejectWithValue(error);
+      const message =
+        error?.response?.data?.message || "Error deleting lecture";
+      toast.error(message);
+      return rejectWithValue(message);
     }
   }
 );
 
-// ================= SLICE =================
 const lectureSlice = createSlice({
   name: "lecture",
   initialState,
   reducers: {},
   extraReducers: (builder) => {
     builder
+      .addCase(getCourseLectures.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
       .addCase(getCourseLectures.fulfilled, (state, action) => {
-        state.lectures = action?.payload?.lectures || [];
+        state.isLoading = false;
+        state.lectures = action.payload || [];
+      })
+      .addCase(getCourseLectures.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+      })
+
+      .addCase(addCourseLectures.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
       })
       .addCase(addCourseLectures.fulfilled, (state, action) => {
-        state.lectures = action?.payload?.course?.lectures || [];
+        state.isLoading = false;
+        state.lectures = action.payload || [];
+      })
+      .addCase(addCourseLectures.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+      })
+
+      .addCase(deleteCourseLectures.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(deleteCourseLectures.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.lectures = state.lectures.filter(
+          (lec) => lec._id !== action.payload
+        );
+      })
+      .addCase(deleteCourseLectures.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
       });
   }
 });

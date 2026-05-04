@@ -1,163 +1,130 @@
 import { useEffect, useState } from "react";
-import HomeLayout from "../../layouts/HomeLayout";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import { useLocation, useNavigate } from "react-router-dom";
+import HomeLayout from "../../layouts/HomeLayout";
 import {
+  getCourseLectures,
   deleteCourseLectures,
-  getCourseLectures
 } from "../../redux/slices/LectureSlice";
 
 const DisplayLectures = () => {
-  const [expanded, setExpanded] = useState(false);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { state } = useLocation();
+
   const [currentVideo, setCurrentVideo] = useState(0);
 
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const { state } = useLocation();
-  const { courseId } = useParams();
+  // 🔥 Better courseId extraction
+  const courseId = state?.courseId || state?._id || state?.id;
+  const courseTitle = state?.title || "Course Lectures";
 
-  const { lectures = [] } = useSelector((state) => state.lecture);
-  const { role } = useSelector((state) => state.auth);
+  const lectureState = useSelector((state) => state.lecture) || {};
+  const lectures = Array.isArray(lectureState.lectures) ? lectureState.lectures : [];
+  const loading = lectureState.loading || false;
+  const role = useSelector((state) => state.auth?.role);
 
-  // FETCH
+  // Fetch Lectures
   useEffect(() => {
-    const id = state?._id || courseId;
-
-    if (!id) {
+    if (!courseId) {
       navigate("/courses");
       return;
     }
 
-    dispatch(getCourseLectures(id));
-  }, [dispatch, state, courseId]);
+    console.log("Fetching lectures for courseId:", courseId); // Debugging
+    dispatch(getCourseLectures(courseId));
+  }, [dispatch, courseId, navigate]);
 
-  // RESET VIDEO
+  // Auto select first video
   useEffect(() => {
     if (lectures.length > 0) {
       setCurrentVideo(0);
     }
   }, [lectures]);
 
-  // DELETE (SAFE + UX)
-  async function onLectureDelete(e, courseId, lectureId) {
-    e.stopPropagation();
+  const currentLecture = lectures[currentVideo] || {};
 
-    const confirmDelete = window.confirm("Delete this lecture?");
-    if (!confirmDelete) return;
+  async function onLectureDelete(e, lectureId) {
+    e.stopPropagation();
+    if (!window.confirm("Delete this lecture?")) return;
 
     await dispatch(deleteCourseLectures({ courseId, lectureId }));
-    dispatch(getCourseLectures(courseId));
+    dispatch(getCourseLectures(courseId)); // Refresh list
   }
 
-  const currentLecture =
-    lectures.length > 0 ? lectures[currentVideo] : null;
+  if (loading) {
+    return (
+      <HomeLayout>
+        <div className="min-h-screen flex items-center justify-center text-white">
+          Loading lectures...
+        </div>
+      </HomeLayout>
+    );
+  }
 
   return (
     <HomeLayout>
-      <div className="min-h-screen py-6 px-3 text-white flex flex-col gap-8 items-center">
-
-        <h1 className="text-3xl font-bold text-yellow-400 text-center">
-          {state?.title || "Course Lectures"}
+      <div className="min-h-screen py-8 px-4 text-white">
+        <h1 className="text-3xl font-bold text-yellow-400 text-center mb-8">
+          {courseTitle}
         </h1>
 
-        {lectures.length > 0 ? (
-          <div className="flex flex-col lg:flex-row w-full max-w-7xl gap-6">
-
-            <div className="w-full lg:w-2/3 p-4 bg-gray-900 rounded-xl shadow-xl">
-
+        {lectures.length === 0 ? (
+          <div className="text-center text-gray-400 py-20 text-xl">
+            No lectures available in this course yet.
+          </div>
+        ) : (
+          <div className="flex flex-col lg:flex-row gap-8 max-w-7xl mx-auto">
+            {/* Video Player */}
+            <div className="lg:w-2/3 bg-gray-900 rounded-xl p-4">
               {currentLecture?.lecture?.secure_url ? (
                 <video
-                  key={currentLecture?.lecture?.secure_url}
+                  key={currentLecture.lecture.secure_url}
                   src={currentLecture.lecture.secure_url}
-                  className="w-full h-96 object-cover rounded-lg border border-gray-700"
+                  className="w-full aspect-video rounded-lg"
                   controls
                   controlsList="nodownload"
                 />
               ) : (
-                <p className="text-center text-gray-400">
-                  No video available
-                </p>
+                <div className="aspect-video bg-black rounded-lg flex items-center justify-center">
+                  <p>No video available</p>
+                </div>
               )}
 
-              <h2 className="text-xl mt-4 font-semibold">
-                {currentLecture?.title}
-              </h2>
-
-              <p
-                className={`text-gray-300 mt-2 ${
-                  !expanded ? "line-clamp-2" : ""
-                }`}
-              >
-                {currentLecture?.description}
-              </p>
-
-              {currentLecture?.description?.length > 100 && (
-                <button
-                  onClick={() => setExpanded(!expanded)}
-                  className="text-yellow-400 mt-2 text-sm hover:underline"
-                >
-                  {expanded ? "Show Less" : "Read More"}
-                </button>
-              )}
+              <h2 className="text-xl font-semibold mt-4">{currentLecture?.title}</h2>
+              <p className="text-gray-300 mt-2">{currentLecture?.description}</p>
             </div>
 
-            <div className="w-full lg:w-1/3 bg-gray-900 p-4 rounded-xl shadow-xl">
+            {/* Lecture List */}
+            <div className="lg:w-1/3 bg-gray-900 rounded-xl p-4">
+              <h3 className="font-semibold mb-4">Lectures ({lectures.length})</h3>
 
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold">Lectures</h3>
-
-                {role === "ADMIN" && (
-                  <button
-                    className="bg-yellow-500 text-black px-3 py-1 rounded-md text-sm font-semibold hover:bg-yellow-600 transition"
-                    onClick={() =>
-                      navigate("/course/addlecture", {
-                        state: { ...state, _id: courseId || state?._id }
-                      })
-                    }
-                  >
-                    + Add
-                  </button>
-                )}
-              </div>
-
-              <ul className="flex flex-col gap-2 max-h-[420px] overflow-y-auto pr-1">
-
+              <div className="max-h-[70vh] overflow-y-auto space-y-2 pr-2">
                 {lectures.map((lec, idx) => (
-                  <li
+                  <div
                     key={lec._id}
                     onClick={() => setCurrentVideo(idx)}
-                    className={`flex justify-between items-center px-3 py-2 rounded-md cursor-pointer transition-all duration-200 ${
-                      idx === currentVideo
-                        ? "bg-yellow-500 text-black font-medium"
-                        : "hover:bg-gray-800"
+                    className={`p-3 rounded-lg cursor-pointer transition-all ${
+                      idx === currentVideo ? "bg-yellow-500 text-black" : "hover:bg-gray-800"
                     }`}
                   >
-                    <p className="flex-1 text-sm truncate">
-                      {idx + 1}. {lec.title}
-                    </p>
-
-                    {role === "ADMIN" && (
-                      <button
-                        onClick={(e) =>
-                          onLectureDelete(
-                            e,
-                            courseId || state?._id,
-                            lec._id
-                          )
-                        }
-                        className="ml-2 text-red-400 text-xs px-2 py-1 rounded hover:bg-red-500 hover:text-white transition"
-                      >
-                        Delete
-                      </button>
-                    )}
-                  </li>
+                    <div className="flex justify-between items-center">
+                      <span className="flex-1">
+                        {idx + 1}. {lec.title}
+                      </span>
+                      {role === "ADMIN" && (
+                        <button
+                          onClick={(e) => onLectureDelete(e, lec._id)}
+                          className="text-red-500 hover:text-red-600 text-sm px-2 py-1 rounded hover:bg-red-900"
+                        >
+                          Delete
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 ))}
-
-              </ul>
+              </div>
             </div>
           </div>
-        ) : (
-          <p className="text-gray-400">No lectures found</p>
         )}
       </div>
     </HomeLayout>

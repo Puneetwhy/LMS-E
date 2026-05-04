@@ -9,8 +9,7 @@ const getRazorpayApikey = async (req, res, next) => {
   try {
     res.status(200).json({
       success: true,
-      message: "Razorpay Api key",
-      key: process.env.RAZORPAY_KEY_ID
+      key: process.env.RAZORPAY_KEY_ID || "",
     });
   } catch (e) {
     return next(new appError(e.message, 500));
@@ -20,39 +19,37 @@ const getRazorpayApikey = async (req, res, next) => {
 // ================= BUY SUBSCRIPTION =================
 const buySubscription = async (req, res, next) => {
   try {
-    const { id } = req.user;
+    const user = await User.findById(req.user.id);
 
-    const user = await User.findById(id);
-
-    if (!user) {
-      return next(new appError("Unauthorized, please login", 400));
-    }
+    if (!user) return next(new appError("Unauthorized", 401));
 
     if (user.role === "ADMIN") {
-      return next(new appError("ADMIN cannot purchase subscription", 400));
+      return next(new appError("Admin cannot purchase subscription", 400));
+    }
+
+    // Prevent duplicate subscription
+    if (user.subscription?.status === "active") {
+      return next(new appError("Subscription already active", 400));
     }
 
     const subscription = await razorpay.subscriptions.create({
       plan_id: process.env.RAZORPAY_PLAN_ID,
       customer_notify: 1,
-      total_count: 12
+      total_count: 12,
     });
 
     user.subscription = {
       id: subscription.id,
-      status: subscription.status
+      status: subscription.status,
     };
 
     await user.save();
 
     res.status(200).json({
       success: true,
-      message: "Subscribed successfully",
-      subscription_id: subscription.id
+      subscription_id: subscription.id,
     });
-
   } catch (e) {
-    console.log("BUY SUBSCRIPTION ERROR:", e);
     return next(new appError(e.message, 500));
   }
 };
@@ -60,44 +57,45 @@ const buySubscription = async (req, res, next) => {
 // ================= VERIFY PAYMENT =================
 const verifySubscription = async (req, res, next) => {
   try {
-    const { id } = req.user;
     const {
       razorpay_payment_id,
       razorpay_signature,
-      razorpay_subscription_id
+      razorpay_subscription_id,
     } = req.body;
 
-    const user = await User.findById(id);
+    const user = await User.findById(req.user.id);
+    if (!user) return next(new appError("Unauthorized", 401));
 
-    if (!user) {
-      return next(new appError("Unauthorized, please login", 400));
+    if (!razorpay_payment_id || !razorpay_signature) {
+      return next(new appError("Invalid payment data", 400));
     }
 
-    const subscriptionId = user.subscription.id;
-
+    // Signature verification
     const generatedSignature = crypto
       .createHmac("sha256", process.env.RAZORPAY_SECRET)
-      .update(`${razorpay_payment_id}|${subscriptionId}`)
+      .update(`${razorpay_payment_id}|${razorpay_subscription_id}`)
       .digest("hex");
 
     if (generatedSignature !== razorpay_signature) {
-      return next(new appError("Payment not verified", 400));
+      return next(new appError("Payment verification failed", 400));
     }
 
+    // Save payment
     await Payment.create({
+      user: user._id,
       razorpay_payment_id,
       razorpay_signature,
-      razorpay_subscription_id
+      razorpay_subscription_id,
     });
 
+    // Activate subscription
     user.subscription.status = "active";
     await user.save();
 
     res.status(200).json({
       success: true,
-      message: "Payment verified successfully"
+      message: "Payment verified successfully",
     });
-
   } catch (e) {
     return next(new appError(e.message, 500));
   }
@@ -106,90 +104,74 @@ const verifySubscription = async (req, res, next) => {
 // ================= CANCEL SUBSCRIPTION =================
 const cancelSubscription = async (req, res, next) => {
   try {
-    const { id } = req.user;
+    const user = await User.findById(req.user.id);
 
-    const user = await User.findById(id);
+    if (!user) return next(new appError("Unauthorized", 401));
 
-    if (!user) {
-      return next(new appError("Unauthorized, please login", 400));
+    if (!user.subscription?.id) {
+      return next(new appError("No active subscription found", 400));
     }
 
-    if (user.role === "ADMIN") {
-      return next(new appError("ADMIN cannot cancel subscription", 400));
-    }
-
-    const subscriptionId = user.subscription.id;
-
-    const subscription = await razorpay.subscriptions.cancel(subscriptionId);
+    const subscription = await razorpay.subscriptions.cancel(
+      user.subscription.id
+    );
 
     user.subscription.status = subscription.status;
     await user.save();
 
     res.status(200).json({
       success: true,
-      message: "Subscription cancelled successfully"
+      message: "Subscription cancelled successfully",
     });
-
   } catch (e) {
     return next(new appError(e.message, 500));
   }
 };
 
+// ================= GET ALL PAYMENTS (ADMIN) =================
 const allPayment = async (req, res, next) => {
   try {
-    const { count } = req.query;
-
     const subscriptions = await razorpay.subscriptions.all({
-      count: count || 100
+      count: req.query.count || 100,
     });
 
-    // 👉 total sales
-    const allPayments = {
-      count: subscriptions.items.length
-    };
+    const items = subscriptions?.items || [];
 
-    // 👉 monthly data
-    const monthlySalesRecord = new Array(12).fill(0);
+    const monthly = new Array(12).fill(0);
 
-    subscriptions.items.forEach((item) => {
-      const date = new Date(item.created_at * 1000);
-      const month = date.getMonth();
-      monthlySalesRecord[month] += 1;
+    items.forEach((item) => {
+      const month = new Date(item.created_at * 1000).getMonth();
+      monthly[month]++;
     });
-
-    const finalMonths = {
-      Jan: monthlySalesRecord[0],
-      Feb: monthlySalesRecord[1],
-      Mar: monthlySalesRecord[2],
-      Apr: monthlySalesRecord[3],
-      May: monthlySalesRecord[4],
-      Jun: monthlySalesRecord[5],
-      Jul: monthlySalesRecord[6],
-      Aug: monthlySalesRecord[7],
-      Sep: monthlySalesRecord[8],
-      Oct: monthlySalesRecord[9],
-      Nov: monthlySalesRecord[10],
-      Dec: monthlySalesRecord[11]
-    };
 
     res.status(200).json({
       success: true,
-      message: "All payments fetched successfully",
-      allPayments,
-      finalMonths,
-      monthlySalesRecord
+      allPayments: { count: items.length },
+      monthlySalesRecord: monthly,
+      finalMonths: {
+        Jan: monthly[0],
+        Feb: monthly[1],
+        Mar: monthly[2],
+        Apr: monthly[3],
+        May: monthly[4],
+        Jun: monthly[5],
+        Jul: monthly[6],
+        Aug: monthly[7],
+        Sep: monthly[8],
+        Oct: monthly[9],
+        Nov: monthly[10],
+        Dec: monthly[11],
+      },
     });
-
   } catch (e) {
     return next(new appError(e.message, 500));
   }
 };
 
-// ================= EXPORT =================
 export {
   getRazorpayApikey,
   buySubscription,
   verifySubscription,
   cancelSubscription,
-  allPayment
+  allPayment,
 };

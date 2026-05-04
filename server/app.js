@@ -16,40 +16,24 @@ const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ================= CORS (FINAL FIX) =================
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      const allowedOrigins = [
-        process.env.FRONTEND_URL,
-        "http://localhost:5173",
-      ];
+// ================= CORS =================
+const corsOptions = {
+  origin: ["http://localhost:5173", "http://127.0.0.1:5173"],
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
 
-      if (!origin) return callback(null, true);
-
-      if (
-        allowedOrigins.includes(origin) ||
-        origin.endsWith(".onrender.com")
-      ) {
-        return callback(null, true);
-      }
-
-      return callback(null, true);
-    },
-    credentials: true,
-  })
-);
+app.use(cors(corsOptions));
 
 // ================= MIDDLEWARE =================
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use(cookieParser());
 app.use(morgan("dev"));
 
 // ================= HEALTH CHECK =================
-app.get("/ping", (req, res) => {
-  res.status(200).send("pong");
-});
+app.get("/ping", (_req, res) => res.status(200).json({ status: "ok" }));
 
 // ================= ROUTES =================
 app.use("/api/v1/user", userRoutes);
@@ -57,16 +41,17 @@ app.use("/api/v1/courses", courseRoutes);
 app.use("/api/v1/payments", paymentRoutes);
 app.use("/api/v1", miscellaneousRoutes);
 
-// ================= FRONTEND (PRODUCTION) =================
+// ================= PRODUCTION =================
 if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "../client/dist")));
+  const clientPath = path.join(__dirname, "../client/dist");
+  app.use(express.static(clientPath));
 
-  app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "../client/dist/index.html"));
+  app.get("/*", (_req, res) => {
+    res.sendFile(path.join(clientPath, "index.html"));
   });
 }
 
-// ================= ERROR HANDLER =================
+// ================= ERROR HANDLER (Last) =================
 app.use(errorMiddleware);
 
 export default app;

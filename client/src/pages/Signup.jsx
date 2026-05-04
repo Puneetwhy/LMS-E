@@ -1,180 +1,139 @@
-import { BsPersonCircle } from "react-icons/bs";
-import HomeLayout from "../layouts/HomeLayout";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { toast } from 'react-hot-toast'
-import { createAccount } from '../redux/slices/authSlice'
+import toast from "react-hot-toast";
+import { BsPersonCircle } from "react-icons/bs";
+import { createAccount } from "../redux/slices/authSlice";
 import { isEmail, isValidPassword } from "../helpers/regexMatcher";
+import HomeLayout from "../layouts/HomeLayout";
 
 const Signup = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
-    const dispatch = useDispatch();
-    const navigate = useNavigate();
-    const [prevImage, setPrevImage] = useState("");
-    const [signupData, setSignupData] = useState({
-        fullName: "",
-        email: "",
-        password: "",
-        avatar: "",
-    });
+  const [previewImage, setPreviewImage] = useState("");
+  const [signupData, setSignupData] = useState({
+    fullName: "",
+    email: "",
+    password: "",
+    avatar: null,
+  });
 
-    const handleUserInput = (e) => {
-        const { name, value } = e.target;
-        setSignupData({
-            ...signupData,
-            [name]: value
-        })
+  const handleInput = (e) => {
+    const { name, value } = e.target;
+    setSignupData({ ...signupData, [name]: value });
+  };
+
+  const handleImage = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Image size should be less than 2MB");
+      return;
     }
 
-    const getImage = (event) => {
-        event.preventDefault();
+    setSignupData({ ...signupData, avatar: file });
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onloadend = () => setPreviewImage(reader.result);
+  };
 
-        const uploadedImage = event.target.files[0];
+  const createNewAccount = async (e) => {
+    e.preventDefault();
 
-        if (uploadedImage) {
-            setSignupData({
-                ...signupData,
-                avatar: uploadedImage
-            });
-            const fileReader = new FileReader();
-            fileReader.readAsDataURL(uploadedImage);
-            fileReader.addEventListener("load", function () {
-                setPrevImage(this.result)
-            })
-        }
+    if (!signupData.fullName || !signupData.email || !signupData.password) {
+      toast.error("All fields are required");
+      return;
     }
 
-    const createNewAccount = async (event) => {
-        event.preventDefault();
+    if (signupData.fullName.length < 5) {
+      toast.error("Name must be at least 5 characters");
+      return;
+    }
+    if (!isEmail(signupData.email)) {
+      toast.error("Invalid Email");
+      return;
+    }
+    if (!isValidPassword(signupData.password)) {
+      toast.error("Password must be strong (8+ chars with uppercase, number, special char)");
+      return;
+    }
 
-        if (!signupData.email || !signupData.fullName || !signupData.password) {
-            toast.error("Please fill all the details");
-            return;
-        }
+    const formData = new FormData();
+    formData.append("fullName", signupData.fullName);
+    formData.append("email", signupData.email);
+    formData.append("password", signupData.password);
+    if (signupData.avatar) formData.append("avatar", signupData.avatar);
 
-        if (signupData.fullName.length < 5) {
-            toast.error("Name should be at least 5 characters");
-            return;
-        }
+    const res = await dispatch(createAccount(formData));
 
-        if (!isEmail(signupData.email)) {
-            toast.error("Invalid email id");
-            return;
-        }
+    if (res?.payload?.success) {
+      navigate("/");
+    }
+  };
 
-        if (!isValidPassword(signupData.password)) {
-            toast.error("Password should be at least 8 characters long with at least one number, one uppercase letter, one lowercase letter and one special character");
-            return;
-        }
+  return (
+    <HomeLayout>
+      <div className="flex items-center justify-center min-h-[90vh]">
+        <form
+          onSubmit={createNewAccount}
+          className="flex flex-col gap-4 p-6 text-white w-[90%] sm:w-[70%] md:w-[50%] lg:w-1/4 shadow-[0_0_10px_black] rounded-lg bg-white/5"
+        >
+          <h1 className="text-2xl font-bold text-center">Create Account</h1>
 
-        const formData = new FormData();
-        formData.append("fullName", signupData.fullName);
-        formData.append("email", signupData.email);
-        formData.append("password", signupData.password);
-        formData.append("avatar", signupData.avatar);
+          <label htmlFor="avatar" className="cursor-pointer self-center">
+            {previewImage ? (
+              <img src={previewImage} alt="preview" className="w-24 h-24 rounded-full object-cover" />
+            ) : (
+              <BsPersonCircle className="w-24 h-24 text-gray-400" />
+            )}
+          </label>
+          <input type="file" id="avatar" className="hidden" accept=".jpg,.jpeg,.png" onChange={handleImage} />
 
-        const response = await dispatch(createAccount(formData));
+          {/* Other fields same as before with autoComplete */}
+          <input
+            type="text"
+            name="fullName"
+            placeholder="Full Name"
+            autoComplete="name"
+            className="bg-transparent px-4 py-2 border rounded focus:border-yellow-500"
+            onChange={handleInput}
+            value={signupData.fullName}
+          />
 
-        if (response?.payload?.success) {
-            setSignupData({
-                fullName: "",
-                email: "",
-                password: "",
-                avatar: "",
-            });
-            setPrevImage("");
-            navigate("/")
-        }
-    };
+          <input
+            type="email"
+            name="email"
+            placeholder="Email"
+            autoComplete="email"
+            className="bg-transparent px-4 py-2 border rounded focus:border-yellow-500"
+            onChange={handleInput}
+            value={signupData.email}
+          />
 
-    return (
-        <HomeLayout>
-            <div className="flex items-center justify-center min-h-[90vh]">
+          <input
+            type="password"
+            name="password"
+            placeholder="Password"
+            autoComplete="new-password"
+            className="bg-transparent px-4 py-2 border rounded focus:border-yellow-500"
+            onChange={handleInput}
+            value={signupData.password}
+          />
 
-                <form noValidate onSubmit={createNewAccount} className="flex flex-col justify-center rounded-lg gap-3 p-4 text-white w-[90%] sm:w-[70%] md:w-[50%] lg:w-1/4 shadow-[0_0_10px_black]">
+          <button type="submit" className="bg-yellow-600 py-2.5 rounded font-semibold hover:bg-yellow-500">
+            Create Account
+          </button>
 
-                    <h1 className="text-xl sm:text-2xl text-center font-bold">
-                        Registration Page
-                    </h1>
-
-                    <label htmlFor="image_uploads" className="cursor-pointer">
-                        {prevImage ? (
-                            <img src={prevImage} alt="avatar" className="w-24 h-24 rounded-full m-auto" />
-                        ) : (
-                            <BsPersonCircle className="w-24 h-24 rounded-full m-auto" />
-                        )}
-                    </label>
-
-                    <input
-                        onChange={getImage}
-                        type="file"
-                        className="hidden"
-                        name="image_uploads"
-                        id="image_uploads"
-                        accept=".jpg, .jpeg, .png, .svg" />
-
-                    <div className="flex flex-col gap-1">
-                        <label htmlFor="fullName" className="font-semibold ">
-                            Name
-                        </label>
-
-                        <input
-                            type="text"
-                            required
-                            name="fullName"
-                            id="fullName"
-                            placeholder="Enter your name.."
-                            autocomplete="name"
-                            className="bg-transparent px-3 py-2 border rounded-sm focus:outline-none focus:ring-1 focus:ring-yellow-500"
-                            onChange={handleUserInput}
-                            value={signupData.fullName} />
-                    </div>
-
-                    <div className="flex flex-col gap-1 ">
-                        <label htmlFor="email" className="font-semibold ">
-                            Email
-                        </label>
-
-                        <input
-                            type="email"
-                            required
-                            name="email"
-                            id="email"
-                            placeholder="Enter your email.."
-                            autocomplete="email"
-                            className="bg-transparent px-3 py-2 border rounded-sm focus:outline-none focus:ring-1 focus:ring-yellow-500"
-                            onChange={handleUserInput}
-                            value={signupData.email} />
-                    </div>
-
-                    <div className="flex flex-col gap-1">
-                        <label htmlFor="password" className="font-semibold ">
-                            Password
-                        </label>
-
-                        <input
-                            type="password"
-                            required
-                            name="password"
-                            id="password"
-                            placeholder="Enter your password.."
-                            autocomplete="new-password"
-                            className="bg-transparent px-3 py-2 border rounded-sm focus:outline-none focus:ring-1 focus:ring-yellow-500"
-                            onChange={handleUserInput}
-                            value={signupData.password} />
-                    </div>
-
-                    <button type="submit" className="w-full bg-yellow-600 py-2 hover:bg-yellow-500 transition-all ease-in-out duration-300 mt-2 rounded-sm font-semibold text-base sm:text-lg cursor-pointer">Create account</button>
-
-                    <p className="text-center">
-                        Already have an account ? <Link to="/login" className="link text-cyan-600 cursor-pointer">Login</Link>
-                    </p>
-                </form>
-
-            </div>
-        </HomeLayout>
-    )
-}
+          <p className="text-center">
+            Already have account?{" "}
+            <Link to="/login" className="text-cyan-400">Login</Link>
+          </p>
+        </form>
+      </div>
+    </HomeLayout>
+  );
+};
 
 export default Signup;
