@@ -13,28 +13,30 @@ import errorMiddleware from "./middlewares/error.middleware.js";
 
 const app = express();
 
-// ✅ FIXED __dirname (ONLY ONCE)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ================= CORS =================
-const allowedOrigins = [
-  process.env.FRONTEND_URL || "http://localhost:5173",
-  "https://lms-e-j7ct.onrender.com"
-];
-
+// ================= CORS (FINAL FIX) =================
 app.use(
   cors({
     origin: function (origin, callback) {
+      const allowedOrigins = [
+        process.env.FRONTEND_URL,
+        "http://localhost:5173",
+      ];
+
       if (!origin) return callback(null, true);
 
-      if (!allowedOrigins.includes(origin)) {
-        return callback(new Error("CORS not allowed"), false);
+      if (
+        allowedOrigins.includes(origin) ||
+        origin.endsWith(".onrender.com")
+      ) {
+        return callback(null, true);
       }
 
       return callback(null, true);
     },
-    credentials: true
+    credentials: true,
   })
 );
 
@@ -44,9 +46,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(morgan("dev"));
 
-// ================= HEALTH =================
+// ================= HEALTH CHECK =================
 app.get("/ping", (req, res) => {
-  res.send("pong");
+  res.status(200).send("pong");
 });
 
 // ================= ROUTES =================
@@ -55,7 +57,7 @@ app.use("/api/v1/courses", courseRoutes);
 app.use("/api/v1/payments", paymentRoutes);
 app.use("/api/v1", miscellaneousRoutes);
 
-// ================= FRONTEND SERVE =================
+// ================= FRONTEND (PRODUCTION) =================
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "../client/dist")));
 
@@ -64,7 +66,7 @@ if (process.env.NODE_ENV === "production") {
   });
 }
 
-// ================= ERROR =================
+// ================= ERROR HANDLER =================
 app.use(errorMiddleware);
 
 export default app;
