@@ -6,9 +6,10 @@ import sendEmail from "../utils/sendEmail.js";
 import crypto from 'crypto';
 
 const cookieOptions = {
-      maxAge : 7 * 24 * 60 * 60 * 1000,
-      httpOnly : true,
-      secure : true
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+  httpOnly: true,
+  secure: true,
+  sameSite: "none"
 }
 
 const register = async (req, res, next ) =>{
@@ -124,10 +125,11 @@ const login = async (req, res, next) => {
 
 const logout = (req, res) => {
       res.cookie('token', null, {
-            secure: true,
-            maxAge: 0,
-            httpOnly : true,
-      })
+  httpOnly: true,
+  secure: true,
+  sameSite: "none",
+  maxAge: 0
+});
 
       res.status(200).json({
             success : true,
