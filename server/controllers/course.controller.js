@@ -145,7 +145,7 @@ const addLecturesToCourseById = async (req, res, next) => {
       try {
         const result = await cloudinary.v2.uploader.upload(req.file.path, {
           folder: "lms",
-          resource_type: "video", // important for video files
+          resource_type: "video", 
         });
 
         lectureData.lecture.public_id = result.public_id;
@@ -181,7 +181,20 @@ const deleteCourseLectureById = async (req, res, next) => {
     const course = await Course.findById(courseId);
     if (!course) return next(new appError("Course not found", 400));
 
-    course.lectures = course.lectures.filter(l => l._id.toString() !== lectureId);
+    const lecture = course.lectures.find(
+      l => l._id.toString() === lectureId
+    );
+
+    if (lecture?.lecture?.public_id) {
+      await cloudinary.v2.uploader.destroy(lecture.lecture.public_id, {
+        resource_type: "video"
+      });
+    }
+
+    course.lectures = course.lectures.filter(
+      l => l._id.toString() !== lectureId
+    );
+
     course.numberOfLectures = course.lectures.length;
 
     await course.save();
@@ -189,7 +202,7 @@ const deleteCourseLectureById = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: "Lecture deleted successfully",
-      course,
+      course
     });
   } catch (e) {
     return next(new appError(e.message, 500));

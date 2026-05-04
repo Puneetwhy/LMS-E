@@ -1,10 +1,26 @@
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import HomeLayout from "../../layouts/HomeLayout";
 
 const CourseDescription = () => {
-
+  const { id } = useParams(); 
   const { state } = useLocation();
   const navigate = useNavigate();
+
+  
+  if (!state) {
+    return (
+      <HomeLayout>
+        <div className="text-white text-center mt-20">
+          No course data found
+        </div>
+      </HomeLayout>
+    );
+  }
+
+ 
+  const isPaid =
+    state?.isPurchased === true ||
+    state?.paymentStatus === "paid";
 
   return (
     <HomeLayout>
@@ -12,9 +28,10 @@ const CourseDescription = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 w-full max-w-6xl bg-white/5 backdrop-blur-lg border border-gray-800 rounded-xl p-6 sm:p-10 shadow-lg">
 
-          {/* LEFT SIDE */}
+          
           <div className="space-y-6">
 
+            
             <div className="overflow-hidden rounded-lg">
               <img
                 className="w-full h-60 sm:h-72 object-cover rounded-lg hover:scale-105 transition duration-500"
@@ -23,7 +40,6 @@ const CourseDescription = () => {
               />
             </div>
 
-            {/* COURSE INFO */}
             <div className="flex flex-wrap justify-center lg:justify-start gap-4">
 
               <div className="bg-gray-900 px-4 py-2 rounded-md border border-gray-700">
@@ -42,18 +58,25 @@ const CourseDescription = () => {
 
             </div>
 
-            {/* BUTTON */}
             <button
-              onClick={() =>
-                navigate("/course/displaylectures", { state: { ...state } })
-              }
+              onClick={() => {
+                if (!isPaid) {
+                  navigate(`/checkout`, {
+                    state: { courseId: id, ...state },
+                  });
+                  return;
+                }
+
+                navigate(`/course/displaylectures/${id}`, {
+                  state: state,
+                });
+              }}
               className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-black text-lg font-bold py-3 rounded-md hover:scale-105 hover:shadow-lg transition duration-300"
             >
-              Watch Lectures
+              {isPaid ? "Watch Lectures" : "Buy Course to Watch Lectures"}
             </button>
 
           </div>
-
 
           {/* RIGHT SIDE */}
           <div className="space-y-6 flex flex-col justify-center">

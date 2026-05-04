@@ -1,139 +1,163 @@
 import { useEffect, useState } from "react";
 import HomeLayout from "../../layouts/HomeLayout";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { deleteCourseLectures, getCourseLectures } from "../../redux/slices/LectureSlice";
+import {
+  deleteCourseLectures,
+  getCourseLectures
+} from "../../redux/slices/LectureSlice";
 
 const DisplayLectures = () => {
   const [expanded, setExpanded] = useState(false);
+  const [currentVideo, setCurrentVideo] = useState(0);
+
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { state } = useLocation();
+  const { courseId } = useParams();
 
-  const { lectures } = useSelector((state) => state.lecture);
+  const { lectures = [] } = useSelector((state) => state.lecture);
   const { role } = useSelector((state) => state.auth);
-  const [currentVideo, setCurrentVideo] = useState(0);
 
-  async function onLectureDelete(courseId, lectureId) {
+  // FETCH
+  useEffect(() => {
+    const id = state?._id || courseId;
+
+    if (!id) {
+      navigate("/courses");
+      return;
+    }
+
+    dispatch(getCourseLectures(id));
+  }, [dispatch, state, courseId]);
+
+  // RESET VIDEO
+  useEffect(() => {
+    if (lectures.length > 0) {
+      setCurrentVideo(0);
+    }
+  }, [lectures]);
+
+  // DELETE (SAFE + UX)
+  async function onLectureDelete(e, courseId, lectureId) {
+    e.stopPropagation();
+
+    const confirmDelete = window.confirm("Delete this lecture?");
+    if (!confirmDelete) return;
+
     await dispatch(deleteCourseLectures({ courseId, lectureId }));
-    await dispatch(getCourseLectures(courseId));
+    dispatch(getCourseLectures(courseId));
   }
 
-  useEffect(() => {
-    if (!state) navigate("/courses");
-    else dispatch(getCourseLectures(state._id));
-  }, []);
+  const currentLecture =
+    lectures.length > 0 ? lectures[currentVideo] : null;
 
   return (
     <HomeLayout>
-      <div className="min-h-screen py-6 px-3 text-white flex flex-col gap-10 items-center">
-        {/* Course Title */}
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-yellow-500 text-center">
-          {state?.title}
+      <div className="min-h-screen py-6 px-3 text-white flex flex-col gap-8 items-center">
+
+        <h1 className="text-3xl font-bold text-yellow-400 text-center">
+          {state?.title || "Course Lectures"}
         </h1>
 
-        {/* Main Content */}
-        {lectures && lectures.length > 0 ? (
-          <div className="flex flex-col lg:flex-row w-full max-w-7xl gap-6 lg:gap-8">
-            {/* Video + Details */}
-            <div className="flex flex-col gap-6 w-full lg:w-2/3 p-6 rounded-2xl bg-gradient-to-br from-yellow-900/20 via-yellow-900/10 to-black/30 backdrop-blur-md border border-gray-700 shadow-xl transition-all hover:shadow-2xl h-full">
-              <div className="w-full h-96 sm:h-[22rem] md:h-[25rem] lg:h-[30rem] relative rounded-xl overflow-hidden shadow-inner">
+        {lectures.length > 0 ? (
+          <div className="flex flex-col lg:flex-row w-full max-w-7xl gap-6">
+
+            <div className="w-full lg:w-2/3 p-4 bg-gray-900 rounded-xl shadow-xl">
+
+              {currentLecture?.lecture?.secure_url ? (
                 <video
-                  src={lectures[currentVideo]?.lecture?.secure_url}
-                  className="w-full h-full object-cover rounded-xl"
+                  key={currentLecture?.lecture?.secure_url}
+                  src={currentLecture.lecture.secure_url}
+                  className="w-full h-96 object-cover rounded-lg border border-gray-700"
                   controls
-                  muted
                   controlsList="nodownload"
                 />
-              </div>
+              ) : (
+                <p className="text-center text-gray-400">
+                  No video available
+                </p>
+              )}
 
-              <div className="space-y-4">
-                {/* Title Section */}
-                 <div className="flex items-center gap-3">
-    <span className="inline-block w-1 h-8 bg-yellow-500 rounded"></span>
-    <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-yellow-400">
-      {lectures[currentVideo]?.title || "Untitled Lecture"}
-    </h2>
-  </div>
+              <h2 className="text-xl mt-4 font-semibold">
+                {currentLecture?.title}
+              </h2>
 
-  {/* Description Section */}
-  <div className="bg-white/10 p-4 rounded-xl border border-gray-700 shadow-inner">
-    <p
-      className={`text-gray-200 text-sm sm:text-base md:text-lg leading-relaxed ${
-        !expanded ? 'line-clamp-2' : ''
-      }`}
-    >
-      {lectures[currentVideo]?.description || "No description available."}
-    </p>
+              <p
+                className={`text-gray-300 mt-2 ${
+                  !expanded ? "line-clamp-2" : ""
+                }`}
+              >
+                {currentLecture?.description}
+              </p>
 
-    {/* More/Less Button */}
-    {lectures[currentVideo]?.description?.length > 120 && (
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="mt-2 text-yellow-400 text-sm font-semibold hover:underline"
-      >
-        {expanded ? 'Less' : 'More'}
-      </button>
-    )}
-  </div>
-              </div>
+              {currentLecture?.description?.length > 100 && (
+                <button
+                  onClick={() => setExpanded(!expanded)}
+                  className="text-yellow-400 mt-2 text-sm hover:underline"
+                >
+                  {expanded ? "Show Less" : "Read More"}
+                </button>
+              )}
             </div>
 
-            {/* Lecture List */}
-            <div className="w-full lg:w-1/3 p-6 rounded-2xl bg-gradient-to-br from-black/20 via-black/10 to-yellow-900/20 backdrop-blur-md border border-gray-700 shadow-xl flex flex-col h-full">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg sm:text-xl font-semibold text-yellow-400">
-                  Lectures
-                </h3>
+            <div className="w-full lg:w-1/3 bg-gray-900 p-4 rounded-xl shadow-xl">
+
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold">Lectures</h3>
+
                 {role === "ADMIN" && (
                   <button
+                    className="bg-yellow-500 text-black px-3 py-1 rounded-md text-sm font-semibold hover:bg-yellow-600 transition"
                     onClick={() =>
-                      navigate("/course/addlecture", { state: { ...state } })
+                      navigate("/course/addlecture", {
+                        state: { ...state, _id: courseId || state?._id }
+                      })
                     }
-                    className="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-black rounded-lg font-semibold text-sm sm:text-base transition"
                   >
-                    Add Lecture
+                    + Add
                   </button>
                 )}
               </div>
 
-              <ul className="space-y-3 flex-1 overflow-y-auto pr-1">
-                {lectures.map((lecture, idx) => (
+              <ul className="flex flex-col gap-2 max-h-[420px] overflow-y-auto pr-1">
+
+                {lectures.map((lec, idx) => (
                   <li
-                    key={lecture._id}
-                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 p-3 rounded-lg hover:bg-yellow-900/20 transition cursor-pointer"
+                    key={lec._id}
+                    onClick={() => setCurrentVideo(idx)}
+                    className={`flex justify-between items-center px-3 py-2 rounded-md cursor-pointer transition-all duration-200 ${
+                      idx === currentVideo
+                        ? "bg-yellow-500 text-black font-medium"
+                        : "hover:bg-gray-800"
+                    }`}
                   >
-                    <p
-                      onClick={() => setCurrentVideo(idx)}
-                      className="text-sm sm:text-base text-white hover:text-yellow-400 transition flex-1"
-                    >
-                      {idx + 1}. {lecture?.title}
+                    <p className="flex-1 text-sm truncate">
+                      {idx + 1}. {lec.title}
                     </p>
 
                     {role === "ADMIN" && (
                       <button
-                        onClick={() => onLectureDelete(state._id, lecture._id)}
-                        className="px-3 py-1 bg-red-600 hover:bg-red-700 rounded-md font-semibold text-sm sm:text-base transition"
+                        onClick={(e) =>
+                          onLectureDelete(
+                            e,
+                            courseId || state?._id,
+                            lec._id
+                          )
+                        }
+                        className="ml-2 text-red-400 text-xs px-2 py-1 rounded hover:bg-red-500 hover:text-white transition"
                       >
                         Delete
                       </button>
                     )}
                   </li>
                 ))}
+
               </ul>
             </div>
           </div>
         ) : (
-          role === "ADMIN" && (
-            <button
-              onClick={() =>
-                navigate("/course/addlecture", { state: { ...state } })
-              }
-              className="px-6 py-3 border border-yellow-500 hover:bg-yellow-600 rounded-2xl font-semibold text-lg transition"
-            >
-              Add First Lecture
-            </button>
-          )
+          <p className="text-gray-400">No lectures found</p>
         )}
       </div>
     </HomeLayout>

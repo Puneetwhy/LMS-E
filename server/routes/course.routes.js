@@ -1,62 +1,78 @@
-import { Router } from 'express';
-import { 
-    createCourse, 
-    getAllCourses, 
-    getLecturesByCourseId, 
-    updateCourse, 
-    removeCourse, 
-    addLecturesToCourseById,
-    deleteCourseLectureById
-} from '../controllers/course.controller.js';
-import { authorizedRoles, authorizeSubscriber, isLoggedIn } from '../middlewares/auth.middleware.js';
-import { upload } from '../middlewares/multer.middleware.js';
+import { Router } from "express";
+import {
+  createCourse,
+  getAllCourses,
+  getLecturesByCourseId,
+  updateCourse,
+  removeCourse,
+  addLecturesToCourseById,
+  deleteCourseLectureById
+} from "../controllers/course.controller.js";
 
-const router = new Router();
+import {
+  authorizedRoles,
+  authorizeSubscriber,
+  isLoggedIn
+} from "../middlewares/auth.middleware.js";
 
-// Get all courses
+import { upload } from "../middlewares/multer.middleware.js";
+
+const router = Router();
+
+// ================= GET ALL COURSES =================
 router.get("/", getAllCourses);
 
-// Create course (ADMIN)
+// ================= CREATE COURSE =================
 router.post(
-    "/",
-    isLoggedIn,
-    authorizedRoles('ADMIN'),
-    upload.single('thumbnail'),
-    createCourse
-);
-
-// Get lectures (logged in subscribers)
-router.get("/:id", isLoggedIn, authorizeSubscriber, getLecturesByCourseId);
-
-// Update course
-router.put(
-    "/:id",
-    isLoggedIn,
-    authorizedRoles('ADMIN'),
-    updateCourse
-);
-
-// Delete course
-router.delete(
-    "/:id",
-    isLoggedIn,
-    authorizedRoles('ADMIN'),
-    removeCourse
-);
-
-// Add lecture to course (ADMIN)
-router.post(
-    "/lecture/:id",
-    isLoggedIn,
-    authorizedRoles('ADMIN'),
-    upload.single('lecture'),
-    addLecturesToCourseById
-);
-
-router.delete(
-  "/lecture/:courseId/:lectureId",
+  "/",
   isLoggedIn,
-  authorizedRoles('ADMIN'),
+  authorizedRoles("ADMIN"),
+  upload.single("thumbnail"),
+  createCourse
+);
+
+// ================= GET LECTURES (FIXED) =================
+// 🔥 ADMIN + SUBSCRIBER both allowed
+router.get(
+  "/:id/lectures",
+  isLoggedIn,
+  (req, res, next) => {
+    if (req.user.role === "ADMIN") return next();
+    return authorizeSubscriber(req, res, next);
+  },
+  getLecturesByCourseId
+);
+
+// ================= UPDATE COURSE =================
+router.put(
+  "/:id",
+  isLoggedIn,
+  authorizedRoles("ADMIN"),
+  updateCourse
+);
+
+// ================= DELETE COURSE =================
+router.delete(
+  "/:id",
+  isLoggedIn,
+  authorizedRoles("ADMIN"),
+  removeCourse
+);
+
+// ================= ADD LECTURE =================
+router.post(
+  "/:id/lecture",
+  isLoggedIn,
+  authorizedRoles("ADMIN"),
+  upload.single("lecture"),
+  addLecturesToCourseById
+);
+
+// ================= DELETE LECTURE =================
+router.delete(
+  "/:courseId/lecture/:lectureId",
+  isLoggedIn,
+  authorizedRoles("ADMIN"),
   deleteCourseLectureById
 );
 

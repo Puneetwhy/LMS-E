@@ -237,7 +237,6 @@ const CreateCourse = () => {
           </div>
 
 
-          {/* BUTTON */}
 
           <button
             type="submit"
