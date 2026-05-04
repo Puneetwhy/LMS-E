@@ -223,7 +223,7 @@ async function resetPassword(req, res, next){
 
 async function changePassword(req, res, next) {
       const { oldPassword, newPassword } = req.body;
-      const { id } = req.user;
+      const { id } = req.user._id || req.user.id;
 
       if(!oldPassword || !newPassword){
             return next(new appError('All fields are required, please try again', 400));
@@ -255,7 +255,7 @@ async function changePassword(req, res, next) {
 
 async function updateUser (req, res, next ) {
       const {fullName} = req.body;
-      const id = req.user.id;
+      const id = req.user._id || req.user.id;
 
       const user = await User.findById(id);
 

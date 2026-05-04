@@ -1,12 +1,12 @@
-import appError from "../utils/error.util.js";
 import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
+import appError from "../utils/error.util.js";
 
-const isLoggedIn = async (req, res, next) => {
+export const isLoggedIn = async (req, res, next) => {
   try {
-    let token = null;
+    let token;
 
-    if (req.cookies && req.cookies.token) {
+    if (req.cookies?.token) {
       token = req.cookies.token;
     }
 
@@ -27,14 +27,13 @@ const isLoggedIn = async (req, res, next) => {
     }
 
     req.user = user;
-
     next();
-  } catch (error) {
+  } catch (err) {
     return next(new appError("Invalid or expired token", 401));
   }
 };
 
-const authorizedRoles = (...roles) => {
+export const authorizedRoles = (...roles) => {
   return (req, res, next) => {
     if (!req.user || !roles.includes(req.user.role)) {
       return next(new appError("Permission denied", 403));
@@ -43,8 +42,8 @@ const authorizedRoles = (...roles) => {
   };
 };
 
-const authorizeSubscriber = async (req, res, next) => {
-  const user = await User.findById(req.user.id);
+export const authorizeSubscriber = async (req, res, next) => {
+  const user = await User.findById(req.user._id);
 
   if (!user) {
     return next(new appError("User not found", 404));
@@ -56,5 +55,3 @@ const authorizeSubscriber = async (req, res, next) => {
 
   next();
 };
-
-export { isLoggedIn, authorizedRoles, authorizeSubscriber };
