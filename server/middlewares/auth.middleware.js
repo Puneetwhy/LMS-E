@@ -8,9 +8,7 @@ export const isLoggedIn = async (req, res, next) => {
 
     if (req.cookies?.token) {
       token = req.cookies.token;
-    }
-
-    if (!token && req.headers.authorization) {
+    } else if (req.headers.authorization?.startsWith("Bearer")) {
       token = req.headers.authorization.split(" ")[1];
     }
 
@@ -20,7 +18,9 @@ export const isLoggedIn = async (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    const user = await User.findById(decoded.id);
+    const userId = decoded.id || decoded._id;
+
+    const user = await User.findById(userId);
 
     if (!user) {
       return next(new appError("User not found", 401));
@@ -28,30 +28,21 @@ export const isLoggedIn = async (req, res, next) => {
 
     req.user = user;
     next();
-  } catch (err) {
-    return next(new appError("Invalid or expired token", 401));
+  } catch (error) {
+    return next(new appError("Invalid or expired token, please login again", 401));
   }
 };
 
 export const authorizedRoles = (...roles) => {
   return (req, res, next) => {
-    if (!req.user || !roles.includes(req.user.role)) {
-      return next(new appError("Permission denied", 403));
+    if (!req.user) {
+      return next(new appError("Unauthorized access", 401));
     }
+
+    if (!roles.includes(req.user.role)) {
+      return next(new appError("You are not allowed to access this route", 403));
+    }
+
     next();
   };
-};
-
-export const authorizeSubscriber = async (req, res, next) => {
-  const user = await User.findById(req.user._id);
-
-  if (!user) {
-    return next(new appError("User not found", 404));
-  }
-
-  if (user.role !== "ADMIN" && user.subscription?.status !== "active") {
-    return next(new appError("Please subscribe", 403));
-  }
-
-  next();
 };

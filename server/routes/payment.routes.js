@@ -1,49 +1,47 @@
-import jwt from "jsonwebtoken";
-import User from "../models/user.model.js";
-import appError from "../utils/error.util.js";
+import { Router } from 'express';
+import { allPayment, buySubscription, cancelSubscription, getRazorpayApikey, verifySubscription } from '../controllers/payment.controller.js';
+import { authorizedRoles, isLoggedIn } from '../middlewares/auth.middleware.js';
 
-export const isLoggedIn = async (req, res, next) => {
-  try {
-    let token = null;
+const router = Router();
 
-    if (req.cookies && req.cookies.token) {
-      token = req.cookies.token;
-    }
+router
+      .route('/razorpay-key')
+      .get(
+            isLoggedIn,
+            getRazorpayApikey
+      );
 
-    if (!token && req.headers.authorization) {
-      token = req.headers.authorization.split(" ")[1];
-    }
+router
+      .route('/subscribe')
+      .post(
+            isLoggedIn,
+            buySubscription
+      );
 
-    if (!token) {
-      return next(new appError("Unauthenticated, please login again", 401));
-    }
+router
+      .route('/verify')
+      .post(
+            isLoggedIn,
+            verifySubscription
+      );
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+router
+      .route('/unsubscribe')
+      .post(
+            isLoggedIn,
+            cancelSubscription
+      );
 
-    const user = await User.findById(decoded.id);
+router
+      .route('/')
+      .get(
+            isLoggedIn,
+            authorizedRoles,
+            allPayment
+      );
 
-    if (!user) {
-      return next(new appError("User not found", 401));
-    }
+export default router
 
-    req.user = user;
 
-    next();
-  } catch (error) {
-    return next(new appError("Invalid or expired token, please login again", 401));
-  }
-};
 
-export const authorizedRoles = (...roles) => {
-  return (req, res, next) => {
-    if (!req.user) {
-      return next(new appError("Unauthorized access", 401));
-    }
 
-    if (!roles.includes(req.user.role)) {
-      return next(new appError("You are not allowed to access this route", 403));
-    }
-
-    next();
-  };
-};
