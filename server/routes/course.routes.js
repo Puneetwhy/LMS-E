@@ -1,4 +1,5 @@
 import { Router } from "express";
+
 import {
   createCourse,
   getAllCourses,
@@ -19,10 +20,8 @@ import { upload } from "../middlewares/multer.middleware.js";
 
 const router = Router();
 
-// ================= GET ALL COURSES =================
 router.get("/", getAllCourses);
 
-// ================= CREATE COURSE =================
 router.post(
   "/",
   isLoggedIn,
@@ -31,19 +30,16 @@ router.post(
   createCourse
 );
 
-// ================= GET LECTURES (FIXED) =================
-// 🔥 ADMIN + SUBSCRIBER both allowed
 router.get(
   "/:id/lectures",
   isLoggedIn,
   (req, res, next) => {
-    if (req.user.role === "ADMIN") return next();
+    if (req.user?.role === "ADMIN") return next();
     return authorizeSubscriber(req, res, next);
   },
   getLecturesByCourseId
 );
 
-// ================= UPDATE COURSE =================
 router.put(
   "/:id",
   isLoggedIn,
@@ -51,7 +47,6 @@ router.put(
   updateCourse
 );
 
-// ================= DELETE COURSE =================
 router.delete(
   "/:id",
   isLoggedIn,
@@ -59,7 +54,6 @@ router.delete(
   removeCourse
 );
 
-// ================= ADD LECTURE =================
 router.post(
   "/:id/lecture",
   isLoggedIn,
@@ -68,7 +62,6 @@ router.post(
   addLecturesToCourseById
 );
 
-// ================= DELETE LECTURE =================
 router.delete(
   "/:courseId/lecture/:lectureId",
   isLoggedIn,
