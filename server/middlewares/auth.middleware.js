@@ -62,3 +62,28 @@ export const authorizedRoles = (...roles) => {
     }
   };
 };
+
+// ================= SUBSCRIBER AUTH =================
+// ✅ Added: allows access only if user has an active subscription
+export const authorizeSubscriber = (req, res, next) => {
+  try {
+    if (!req.user) {
+      return next(new appError("Unauthorized access", 401));
+    }
+
+    // ADMIN always passes (handled in route before this runs, but double-safe)
+    if (req.user.role === "ADMIN") {
+      return next();
+    }
+
+    if (req.user.subscription?.status !== "active") {
+      return next(
+        new appError("Please subscribe to access course lectures", 403)
+      );
+    }
+
+    next();
+  } catch (error) {
+    return next(new appError("Authorization failed", 500));
+  }
+};
