@@ -27,7 +27,6 @@ const buySubscription = async (req, res, next) => {
       return next(new appError("Admin cannot purchase subscription", 400));
     }
 
-    // Prevent duplicate subscription
     if (user.subscription?.status === "active") {
       return next(new appError("Subscription already active", 400));
     }
@@ -66,11 +65,10 @@ const verifySubscription = async (req, res, next) => {
     const user = await User.findById(req.user.id);
     if (!user) return next(new appError("Unauthorized", 401));
 
-    if (!razorpay_payment_id || !razorpay_signature) {
+    if (!razorpay_payment_id || !razorpay_signature || !razorpay_subscription_id) {
       return next(new appError("Invalid payment data", 400));
     }
 
-    // Signature verification
     const generatedSignature = crypto
       .createHmac("sha256", process.env.RAZORPAY_SECRET)
       .update(`${razorpay_payment_id}|${razorpay_subscription_id}`)
@@ -80,7 +78,6 @@ const verifySubscription = async (req, res, next) => {
       return next(new appError("Payment verification failed", 400));
     }
 
-    // Save payment
     await Payment.create({
       user: user._id,
       razorpay_payment_id,
@@ -88,7 +85,6 @@ const verifySubscription = async (req, res, next) => {
       razorpay_subscription_id,
     });
 
-    // Activate subscription
     user.subscription.status = "active";
     await user.save();
 
@@ -131,9 +127,9 @@ const cancelSubscription = async (req, res, next) => {
 // ================= GET ALL PAYMENTS (ADMIN) =================
 const allPayment = async (req, res, next) => {
   try {
-    const subscriptions = await razorpay.subscriptions.all({
-      count: req.query.count || 100,
-    });
+    const count = parseInt(req.query.count) || 100; // ✅ Parse to int safely
+
+    const subscriptions = await razorpay.subscriptions.all({ count });
 
     const items = subscriptions?.items || [];
 
