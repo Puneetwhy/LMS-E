@@ -3,15 +3,15 @@ import toast from "react-hot-toast";
 import axiosInstance from "../../helpers/axiosInstance";
 
 const initialState = {
-    allUsersCount: 0,
+    allUserCount: 0,       // ✅ Matches AdminDashboard: state.stat.allUserCount
     subscribedCount: 0,
     loading: false,
+    error: null,
 };
 
 export const getStatData = createAsyncThunk('stats/get', async (_, { rejectWithValue }) => {
     try {
         const response = await axiosInstance.get('/api/v1/admin/stats/users');
-        
         return response?.data;
     } catch (error) {
         const message = error?.response?.data?.message || "Failed to load stats";
@@ -28,14 +28,17 @@ const statSlice = createSlice({
         builder
             .addCase(getStatData.pending, (state) => {
                 state.loading = true;
+                state.error = null;
             })
             .addCase(getStatData.fulfilled, (state, action) => {
                 state.loading = false;
-                state.allUsersCount = action.payload?.allUsersCount || 0;
-                state.subscribedCount = action.payload?.subscribedCount || 0;
+                // ✅ Handle both possible field names from backend
+                state.allUserCount = action.payload?.allUserCount ?? action.payload?.allUsersCount ?? 0;
+                state.subscribedCount = action.payload?.subscribedCount ?? 0;
             })
-            .addCase(getStatData.rejected, (state) => {
+            .addCase(getStatData.rejected, (state, action) => {
                 state.loading = false;
+                state.error = action.payload;
             });
     }
 });
