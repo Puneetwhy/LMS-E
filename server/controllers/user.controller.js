@@ -12,301 +12,296 @@ const cookieOptions = {
   sameSite: "none"
 }
 
-const register = async (req, res, next ) =>{
-      const {fullName, email, password } = req.body;
+const register = async (req, res, next) => {
+  const { fullName, email, password } = req.body;
 
-      if(!fullName || !email || !password){
-            return next(new appError('All fields are required', 400));
+  if (!fullName || !email || !password) {
+    return next(new appError('All fields are required', 400));
+  }
+
+  const userExist = await User.findOne({ email });
+
+  if (userExist) {
+    return next(new appError('Email already exists', 400));
+  }
+
+  const user = await User.create({
+    fullName,
+    email,
+    password,
+    avatar: {
+      public_id: email,
+      secure_url: 'https://img.freepik.com/premium-vector/male-face-avatar-icon-set-flat-design-social-media-profiles_1281173-3806.jpg?w=360'
+    }
+  });
+
+  if (!user) {
+    return next(new appError('User registration failed, please try again', 400));
+  }
+
+  if (req.file) {
+    try {
+      const result = await cloudinary.v2.uploader.upload(req.file.path, {
+        folder: 'lms',
+        width: 250,
+        height: 250,
+        gravity: 'faces',
+        crop: 'fill'
+      });
+
+      if (result) {
+        user.avatar.public_id = result.public_id;
+        user.avatar.secure_url = result.secure_url;
+
+        fs.unlink(req.file.path, (err) => {
+          if (err) console.log("File delete fail:", err.message);
+          else console.log("File deleted");
+        });
       }
+    } catch (e) {
+      console.error("Upload error:", e.message);
+    }
+  }
 
-      const userExist =await User.findOne({ email });
+  await user.save();
 
-      if(userExist){
-             return next(new appError('Email already exist', 400));   
-      }
+  const token = await user.generateJWTToken();
 
-     
-      const user = await User.create({
-            fullName,
-            email,
-            password,
-            avatar : {
-                  public_id :  email,
-                  secure_url : 'https://img.freepik.com/premium-vector/male-face-avatar-icon-set-flat-design-social-media-profiles_1281173-3806.jpg?w=360'
-            }
-      })
+  user.password = undefined;
 
-      
+  res.cookie('token', token, cookieOptions);
 
-      if(!user){
-             return next(new appError('User registration failed, please try again', 400));
-      }
-
-
-    
-      if(req.file){
-            try{
-                  const result = await cloudinary.v2.uploader.upload(req.file.path, {
-                        folder :'lms',
-                        width : '250',
-                        height : '250',
-                        gravity : 'faces',
-                        crop : 'fill'
-                  })
-
-                  if(result){
-                        user.avatar.public_id = result.public_id;
-                        user.avatar.secure_url = result.secure_url;
-
-                       
-                        fs.unlink(req.file.path, (err) => {
-                              if (err) console.log("File delete fail:", err.message);
-                              else console.log("File deleted");
-                        });
-                  }
-            }catch(e){
-                  console.error("Upload error:", e.message);
-            }
-      }
-
-      await user.save();
-
-      
-      user.password = undefined;
-
-
-       
-
-      const token = await user.generateJWTToken();
-
-      res.cookie('token', token, cookieOptions)
-      res.status(201).json({
-            success : true, 
-            message : 'User registered successfully',
-            user
-      })
-
-}
+  res.status(201).json({
+    success: true,
+    message: 'User registered successfully',
+    user,
+    token  // ✅ Return token in body for Bearer fallback
+  });
+};
 
 const login = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
 
-      try{
-            const {email, password} = req.body;
+    if (!email || !password) {
+      return next(new appError('All fields are required', 400));
+    }
 
-            if(!email || !password){
-                  return next(new appError('All fields are required', 400));
-            }
+    const user = await User.findOne({ email }).select('+password');
 
-            const user = await User.findOne({
-                        email
-                        }).select('+password');
+    if (!user || !(await user.comparePassword(password))) {
+      return next(new appError(`Email or password doesn't match`, 400));
+    }
 
+    const token = await user.generateJWTToken();
 
-            if(!user || !(await user.comparePassword(password))){
-                  return next(new appError(`Email or password doesn't match`, 400))
-            }
+    user.password = undefined;
 
-            const token = await user.generateJWTToken();
+    res.cookie('token', token, cookieOptions);
 
-            user.password = undefined;
+    res.status(200).json({
+      success: true,
+      message: 'User logged in successfully',
+      user,
+      token  // ✅ Return token in body for Bearer fallback
+    });
 
-            res.cookie('token', token, cookieOptions);
-
-            res.status(200).json({
-                  success : true, 
-                  message : 'User loggedin successfully',
-                  user,
-            })
-
-      }catch(e){
-            return next(new appError(e.message, 500));
-      }
-}
+  } catch (e) {
+    return next(new appError(e.message, 500));
+  }
+};
 
 const logout = (req, res) => {
-      res.cookie('token', null, {
-  httpOnly: true,
-  secure: true,
-  sameSite: "none",
-  maxAge: 0
-});
+  res.cookie('token', null, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+    maxAge: 0
+  });
 
-      res.status(200).json({
-            success : true,
-            message : 'User loggedout successfully'
-      })
-}
+  res.status(200).json({
+    success: true,
+    message: 'User logged out successfully'
+  });
+};
 
 const getProfile = async (req, res, next) => {
-      try{
-            const userId = req.user.id;
-            const user = await User.findById(userId);
-            res.status(200).json({
-                  success : true,
-                  message : 'User Details',
-                  user,
-            })
-      }catch(e){
-            return next(new appError('Failed to fetch User Details', 500))
-      }
-}
+  try {
+    const userId = req.user.id;
+    const user = await User.findById(userId);
+
+    res.status(200).json({
+      success: true,
+      message: 'User Details',
+      user,
+    });
+  } catch (e) {
+    return next(new appError('Failed to fetch User Details', 500));
+  }
+};
 
 async function forgotPassword(req, res, next) {
-      const { email } = req.body;
+  const { email } = req.body;
 
-      if(!email){
-            return next(new appError('Email required, please try again', 400));
-      }
+  if (!email) {
+    return next(new appError('Email required, please try again', 400));
+  }
 
-      const user = await User.findOne({ email });
+  const user = await User.findOne({ email });
 
-      if(!user){
-            return next(new appError('Email not registered', 400));
-      }
+  if (!user) {
+    return next(new appError('Email not registered', 400));
+  }
 
-      const resetToken = await user.generatePasswordResetToken();
+  const resetToken = await user.generatePasswordResetToken();
 
-      await user.save();
+  await user.save();
 
-      //ham yahan path(reset token) me de rhe hai lekin hsm query param me bhi de sakte hai dekhen kaise
-      const resetPasswordURL = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+  const resetPasswordURL = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
 
-      const subject = 'Reset Password'
-      const message = `you can reset your password by clicking <a herf=${ resetPasswordURL } target="_blank"> Reset your password </a>\n if the above link does not work for same reason then copy paste this link in a new tab ${ resetPasswordURL }. \n if you have not requested this, kindly ignore`
+  const subject = 'Reset Password';
+  const message = `You can reset your password by clicking <a href="${resetPasswordURL}" target="_blank">Reset your password</a>\nIf the above link does not work, copy and paste this link in a new tab: ${resetPasswordURL}.\nIf you did not request this, kindly ignore.`;
 
-      try{
-            await sendEmail(email, subject, message);
+  try {
+    await sendEmail(email, subject, message);
 
-            res.status(200).json({
-                  success: true,
-                  message: `Reset password token has been sent to ${email} successfully`
-            })
-      }catch(e){
+    res.status(200).json({
+      success: true,
+      message: `Reset password token has been sent to ${email} successfully`
+    });
+  } catch (e) {
+    // ✅ Correct field names (was 'frogotPasswordExpiry' — typo fixed)
+    user.forgotPasswordExpiry = undefined;
+    user.forgotPasswordToken = undefined;
 
-            user.frogotPasswordExpiry = undefined;
-            user.forgotPasswordToken = undefined;
+    await user.save();
 
-            await user.save();
-
-            return next(new appError(e.message, 500));
-      }
+    return next(new appError(e.message, 500));
+  }
 }
 
-async function resetPassword(req, res, next){
-      const { resetToken } = req.params;
-      const { password } = req.body;
-      const forgotPasswordToken = crypto
-            .createHash('sha256')
-            .update(resetToken)
-            .digest('hex');
+async function resetPassword(req, res, next) {
+  const { resetToken } = req.params;
+  const { password } = req.body;
 
-      const user = await User.findOne({
-            forgotPasswordToken,
-            frogotPasswordExpiry:{$gt: Date.now()}
-      })
+  const forgotPasswordToken = crypto
+    .createHash('sha256')
+    .update(resetToken)
+    .digest('hex');
 
-      if(!user){
-            return next(new appError('Token is invalid or expired, please try again', 400));
-      }
+  // ✅ Consistent field name (fixed typo: was 'frogotPasswordExpiry')
+  const user = await User.findOne({
+    forgotPasswordToken,
+    forgotPasswordExpiry: { $gt: Date.now() }
+  });
 
-      user.password = password;
-      user.forgotPasswordToken = undefined;
-      user.frogotPasswordExpiry = undefined;
+  if (!user) {
+    return next(new appError('Token is invalid or expired, please try again', 400));
+  }
 
-      user.save();
+  user.password = password;
+  user.forgotPasswordToken = undefined;
+  user.forgotPasswordExpiry = undefined;
 
-      res.status(200).json({
-            success: true,
-            message: 'Password changed successfully!',
-      })
+  await user.save(); // ✅ Fixed: was missing await
+
+  res.status(200).json({
+    success: true,
+    message: 'Password changed successfully!',
+  });
 }
 
 async function changePassword(req, res, next) {
-      const { oldPassword, newPassword } = req.body;
-      const { id } = req.user._id || req.user.id;
+  const { oldPassword, newPassword } = req.body;
+  const id = req.user._id || req.user.id; // ✅ Fixed: was wrongly destructuring
 
-      if(!oldPassword || !newPassword){
-            return next(new appError('All fields are required, please try again', 400));
-      }
+  if (!oldPassword || !newPassword) {
+    return next(new appError('All fields are required, please try again', 400));
+  }
 
-      const user = await User.findById(id).select("+password");
+  const user = await User.findById(id).select("+password");
 
-      if(!user){
-            return next(new appError('User does not exist', 400));
-      }
+  if (!user) {
+    return next(new appError('User does not exist', 400));
+  }
 
-      const isPasswordValid =  await user.comparePassword(oldPassword);
+  const isPasswordValid = await user.comparePassword(oldPassword);
 
-      if(!isPasswordValid){
-            return next(new appError('Invalid old password', 400));
-      }
+  if (!isPasswordValid) {
+    return next(new appError('Invalid old password', 400));
+  }
 
-      user.password = newPassword;
+  user.password = newPassword;
 
-      await user.save();
+  await user.save();
 
-      user.password = undefined;
+  user.password = undefined;
 
-      res.status(200).json({
-            success: true,
-            message: 'Password changed successfully!'
-      })
+  res.status(200).json({
+    success: true,
+    message: 'Password changed successfully!'
+  });
 }
 
-async function updateUser (req, res, next ) {
-      const {fullName} = req.body;
-      const id = req.user._id || req.user.id;
+async function updateUser(req, res, next) {
+  const { fullName } = req.body;
+  const id = req.user._id || req.user.id;
 
-      const user = await User.findById(id);
+  const user = await User.findById(id);
 
-      if(!user){
-            return next(new appError('User does not exist', 400));
+  if (!user) {
+    return next(new appError('User does not exist', 400));
+  }
+
+  // ✅ Fixed: was setting req.fullName instead of user.fullName
+  if (fullName) {
+    user.fullName = fullName;
+  }
+
+  if (req.file) {
+    // ✅ Destroy old avatar only if it's not the default email placeholder
+    if (user.avatar?.public_id && user.avatar.public_id !== user.email) {
+      await cloudinary.v2.uploader.destroy(user.avatar.public_id);
+    }
+
+    try {
+      const result = await cloudinary.v2.uploader.upload(req.file.path, {
+        folder: 'lms',
+        width: 250,
+        height: 250,
+        gravity: 'faces',
+        crop: 'fill'
+      });
+
+      if (result) {
+        user.avatar.public_id = result.public_id;
+        user.avatar.secure_url = result.secure_url;
+
+        // ✅ Fixed: use fs.unlink instead of fs.rm (more compatible)
+        fs.unlink(req.file.path, (err) => {
+          if (err) console.log("File delete fail:", err.message);
+        });
       }
+    } catch (e) {
+      return next(new appError(e.message || 'File not uploaded, please try again', 500));
+    }
+  }
 
-      if(req.fullName){
-            req.fullName = fullName;
-      }
+  await user.save();
 
-      if(req.file){
-            await cloudinary.v2.uploader.destroy(user.avatar.public_id);
-            try{
-                  const result = await cloudinary.v2.uploader.upload(req.file.path, {
-                        folder :'lms',
-                        width : '250',
-                        height : '250',
-                        gravity : 'faces',
-                        crop : 'fill'
-                  })
-
-                  if(result){
-                        user.avatar.public_id = result.public_id;
-                        user.avatar.secure_url = result.secure_url;
-
-                        //remove file from local system(server) we will keep only on cloudinary
-                        fs.rm(`uploads/${req.file.filename}`);
-                  }
-            }catch(e){
-                  return next(new appError(error || 'File not uploaded, please try again'));
-            }
-      }
-
-      await user.save();
-
-      res.status(200).json({
-            success: true,
-            message: `User's details updated successfully!`
-      })
+  res.status(200).json({
+    success: true,
+    message: `User's details updated successfully!`
+  });
 }
 
-
-
-export{
-      register,
-      login,
-      logout,
-      getProfile,
-      forgotPassword,
-      resetPassword,
-      changePassword,
-      updateUser
-}
+export {
+  register,
+  login,
+  logout,
+  getProfile,
+  forgotPassword,
+  resetPassword,
+  changePassword,
+  updateUser
+};
