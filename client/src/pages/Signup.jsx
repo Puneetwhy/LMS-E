@@ -85,7 +85,7 @@ const Signup = () => {
         {/* ===== RECRUITER NOTICE BANNER ===== */}
         <div className="w-[90%] sm:w-[70%] md:w-[50%] lg:w-96 bg-yellow-500/10 border border-yellow-500/40 rounded-xl p-4 text-sm text-yellow-300">
           <p className="font-bold text-yellow-400 mb-2 flex items-center gap-2">
-            <span>👋</span> Hey Recruiter / Reviewer!
+             Hey Recruiter / Reviewer!
           </p>
           <p className="text-yellow-200 leading-relaxed">
             To explore the <span className="font-semibold text-yellow-400">Admin Dashboard</span> and all features, head to the{" "}
