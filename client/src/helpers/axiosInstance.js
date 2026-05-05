@@ -24,11 +24,11 @@ axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Clear stored token if it's expired/invalid
       localStorage.removeItem("token");
+      localStorage.removeItem("isLoggedIn");
+      localStorage.removeItem("role");
+      localStorage.removeItem("data");
 
-      // Redirect to login page
-      // Adjust the path to match your React Router login route
       if (window.location.pathname !== "/login") {
         window.location.href = "/login";
       }
