@@ -1,307 +1,275 @@
-import User from "../models/user.model.js";
+import Course from "../models/course.model.js";
 import appError from "../utils/error.util.js";
-import cloudinary from "cloudinary";
-import fs from 'fs';
-import sendEmail from "../utils/sendEmail.js";
-import crypto from 'crypto';
+import { v2 as cloudinary } from "cloudinary"; // ✅ Fixed: was `import cloudinary from "cloudinary"` — v2 didn't exist on default import
+import fs from "fs";
 
-const cookieOptions = {
-  maxAge: 7 * 24 * 60 * 60 * 1000,
-  httpOnly: true,
-  secure: true,
-  sameSite: "none"
-}
-
-const register = async (req, res, next) => {
-  const { fullName, email, password } = req.body;
-
-  if (!fullName || !email || !password) {
-    return next(new appError('All fields are required', 400));
-  }
-
-  const userExist = await User.findOne({ email });
-
-  if (userExist) {
-    return next(new appError('Email already exists', 400));
-  }
-
-  const user = await User.create({
-    fullName,
-    email,
-    password,
-    avatar: {
-      public_id: email,
-      secure_url: 'https://img.freepik.com/premium-vector/male-face-avatar-icon-set-flat-design-social-media-profiles_1281173-3806.jpg?w=360'
-    }
-  });
-
-  if (!user) {
-    return next(new appError('User registration failed, please try again', 400));
-  }
-
-  if (req.file) {
-    try {
-      const result = await cloudinary.v2.uploader.upload(req.file.path, {
-        folder: 'lms',
-        width: 250,
-        height: 250,
-        gravity: 'faces',
-        crop: 'fill'
-      });
-
-      if (result) {
-        user.avatar.public_id = result.public_id;
-        user.avatar.secure_url = result.secure_url;
-
-        fs.unlink(req.file.path, (err) => {
-          if (err) console.log("File delete fail:", err.message);
-          else console.log("File deleted");
-        });
-      }
-    } catch (e) {
-      console.error("Upload error:", e.message);
-    }
-  }
-
-  await user.save();
-
-  const token = await user.generateJWTToken();
-
-  user.password = undefined;
-
-  res.cookie('token', token, cookieOptions);
-
-  res.status(201).json({
-    success: true,
-    message: 'User registered successfully',
-    user,
-    token  // ✅ Return token in body for Bearer fallback
-  });
-};
-
-const login = async (req, res, next) => {
+// ================= GET ALL COURSES =================
+const getAllCourses = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      return next(new appError('All fields are required', 400));
-    }
-
-    const user = await User.findOne({ email }).select('+password');
-
-    if (!user || !(await user.comparePassword(password))) {
-      return next(new appError(`Email or password doesn't match`, 400));
-    }
-
-    const token = await user.generateJWTToken();
-
-    user.password = undefined;
-
-    res.cookie('token', token, cookieOptions);
+    const courses = await Course.find()
+      .select("-lectures")
+      .lean();
 
     res.status(200).json({
       success: true,
-      message: 'User logged in successfully',
-      user,
-      token  // ✅ Return token in body for Bearer fallback
+      message: "All courses fetched successfully",
+      courses: courses || [],
     });
-
   } catch (e) {
     return next(new appError(e.message, 500));
   }
 };
 
-const logout = (req, res) => {
-  res.cookie('token', null, {
-    httpOnly: true,
-    secure: true,
-    sameSite: "none",
-    maxAge: 0
-  });
-
-  res.status(200).json({
-    success: true,
-    message: 'User logged out successfully'
-  });
-};
-
-const getProfile = async (req, res, next) => {
+// ================= GET LECTURES =================
+const getLecturesByCourseId = async (req, res, next) => {
   try {
-    const userId = req.user.id;
-    const user = await User.findById(userId);
+    const { id } = req.params;
+
+    if (!id) return next(new appError("Course id is required", 400));
+
+    const course = await Course.findById(id).lean();
+
+    if (!course) {
+      return next(new appError("Invalid course id", 400));
+    }
 
     res.status(200).json({
       success: true,
-      message: 'User Details',
-      user,
+      message: "Course lectures fetched successfully",
+      lectures: course.lectures || [],
     });
   } catch (e) {
-    return next(new appError('Failed to fetch User Details', 500));
-  }
-};
-
-async function forgotPassword(req, res, next) {
-  const { email } = req.body;
-
-  if (!email) {
-    return next(new appError('Email required, please try again', 400));
-  }
-
-  const user = await User.findOne({ email });
-
-  if (!user) {
-    return next(new appError('Email not registered', 400));
-  }
-
-  const resetToken = await user.generatePasswordResetToken();
-
-  await user.save();
-
-  const resetPasswordURL = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
-
-  const subject = 'Reset Password';
-  const message = `You can reset your password by clicking <a href="${resetPasswordURL}" target="_blank">Reset your password</a>\nIf the above link does not work, copy and paste this link in a new tab: ${resetPasswordURL}.\nIf you did not request this, kindly ignore.`;
-
-  try {
-    await sendEmail(email, subject, message);
-
-    res.status(200).json({
-      success: true,
-      message: `Reset password token has been sent to ${email} successfully`
-    });
-  } catch (e) {
-    // ✅ Correct field names (was 'frogotPasswordExpiry' — typo fixed)
-    user.forgotPasswordExpiry = undefined;
-    user.forgotPasswordToken = undefined;
-
-    await user.save();
-
     return next(new appError(e.message, 500));
   }
-}
+};
 
-async function resetPassword(req, res, next) {
-  const { resetToken } = req.params;
-  const { password } = req.body;
+// ================= CREATE COURSE =================
+const createCourse = async (req, res, next) => {
+  try {
+    const { title, description, category, createdBy } = req.body;
 
-  const forgotPasswordToken = crypto
-    .createHash('sha256')
-    .update(resetToken)
-    .digest('hex');
-
-  // ✅ Consistent field name (fixed typo: was 'frogotPasswordExpiry')
-  const user = await User.findOne({
-    forgotPasswordToken,
-    forgotPasswordExpiry: { $gt: Date.now() }
-  });
-
-  if (!user) {
-    return next(new appError('Token is invalid or expired, please try again', 400));
-  }
-
-  user.password = password;
-  user.forgotPasswordToken = undefined;
-  user.forgotPasswordExpiry = undefined;
-
-  await user.save(); // ✅ Fixed: was missing await
-
-  res.status(200).json({
-    success: true,
-    message: 'Password changed successfully!',
-  });
-}
-
-async function changePassword(req, res, next) {
-  const { oldPassword, newPassword } = req.body;
-  const id = req.user._id || req.user.id; // ✅ Fixed: was wrongly destructuring
-
-  if (!oldPassword || !newPassword) {
-    return next(new appError('All fields are required, please try again', 400));
-  }
-
-  const user = await User.findById(id).select("+password");
-
-  if (!user) {
-    return next(new appError('User does not exist', 400));
-  }
-
-  const isPasswordValid = await user.comparePassword(oldPassword);
-
-  if (!isPasswordValid) {
-    return next(new appError('Invalid old password', 400));
-  }
-
-  user.password = newPassword;
-
-  await user.save();
-
-  user.password = undefined;
-
-  res.status(200).json({
-    success: true,
-    message: 'Password changed successfully!'
-  });
-}
-
-async function updateUser(req, res, next) {
-  const { fullName } = req.body;
-  const id = req.user._id || req.user.id;
-
-  const user = await User.findById(id);
-
-  if (!user) {
-    return next(new appError('User does not exist', 400));
-  }
-
-  // ✅ Fixed: was setting req.fullName instead of user.fullName
-  if (fullName) {
-    user.fullName = fullName;
-  }
-
-  if (req.file) {
-    // ✅ Destroy old avatar only if it's not the default email placeholder
-    if (user.avatar?.public_id && user.avatar.public_id !== user.email) {
-      await cloudinary.v2.uploader.destroy(user.avatar.public_id);
+    if (!title || !description || !category || !createdBy) {
+      return next(new appError("All fields are required", 400));
     }
 
-    try {
-      const result = await cloudinary.v2.uploader.upload(req.file.path, {
-        folder: 'lms',
-        width: 250,
-        height: 250,
-        gravity: 'faces',
-        crop: 'fill'
-      });
+    const course = await Course.create({
+      title,
+      description,
+      category,
+      createdBy,
+      thumbnail: {
+        public_id: "",
+        secure_url: "",
+      },
+    });
 
-      if (result) {
-        user.avatar.public_id = result.public_id;
-        user.avatar.secure_url = result.secure_url;
-
-        // ✅ Fixed: use fs.unlink instead of fs.rm (more compatible)
-        fs.unlink(req.file.path, (err) => {
-          if (err) console.log("File delete fail:", err.message);
+    if (req.file?.path) {
+      try {
+        const result = await cloudinary.uploader.upload(req.file.path, { // ✅ Fixed: cloudinary.uploader (not cloudinary.v2.uploader)
+          folder: "lms",
+          resource_type: "image",
         });
+
+        course.thumbnail = {
+          public_id: result.public_id,
+          secure_url: result.secure_url,
+        };
+      } catch (e) {
+        console.error("Cloudinary upload error:", e.message);
+        return next(new appError("Thumbnail upload failed: " + e.message, 500));
+      } finally {
+        if (fs.existsSync(req.file.path)) fs.rmSync(req.file.path);
       }
-    } catch (e) {
-      return next(new appError(e.message || 'File not uploaded, please try again', 500));
     }
+
+    await course.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Course created successfully",
+      course,
+    });
+  } catch (e) {
+    return next(new appError(e.message, 500));
   }
+};
 
-  await user.save();
+// ================= UPDATE COURSE =================
+const updateCourse = async (req, res, next) => {
+  try {
+    const { id } = req.params;
 
-  res.status(200).json({
-    success: true,
-    message: `User's details updated successfully!`
-  });
-}
+    if (!id) return next(new appError("Course id is required", 400));
+
+    const allowedFields = ["title", "description", "category", "createdBy"];
+
+    const updateData = {};
+    allowedFields.forEach((field) => {
+      if (req.body[field] !== undefined) {
+        updateData[field] = req.body[field];
+      }
+    });
+
+    const course = await Course.findByIdAndUpdate(id, updateData, {
+      runValidators: true,
+      new: true,
+    });
+
+    if (!course) {
+      return next(new appError("Course not found", 404));
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Course updated successfully",
+      course,
+    });
+  } catch (e) {
+    return next(new appError(e.message, 500));
+  }
+};
+
+// ================= DELETE COURSE =================
+const removeCourse = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) return next(new appError("Course id is required", 400));
+
+    const course = await Course.findById(id);
+
+    if (!course) {
+      return next(new appError("Course not found", 404));
+    }
+
+    if (course.thumbnail?.public_id) {
+      await cloudinary.uploader.destroy(course.thumbnail.public_id); // ✅ Fixed
+    }
+
+    await Promise.all(
+      course.lectures.map((lec) => {
+        if (lec?.lecture?.public_id) {
+          return cloudinary.uploader.destroy( // ✅ Fixed
+            lec.lecture.public_id,
+            { resource_type: "video" }
+          );
+        }
+      })
+    );
+
+    await Course.findByIdAndDelete(id);
+
+    res.status(200).json({
+      success: true,
+      message: "Course deleted successfully",
+    });
+  } catch (e) {
+    return next(new appError(e.message, 500));
+  }
+};
+
+// ================= ADD LECTURE =================
+const addLecturesToCourseById = async (req, res, next) => {
+  try {
+    const { title, description } = req.body;
+    const { id } = req.params;
+
+    if (!id) return next(new appError("Course id is required", 400));
+
+    if (!title || !description) {
+      return next(new appError("All fields required", 400));
+    }
+
+    const course = await Course.findById(id);
+    if (!course) return next(new appError("Course not found", 404));
+
+    const lectureData = { title, description, lecture: {} };
+
+    if (req.file?.path) {
+      try {
+        const result = await cloudinary.uploader.upload(req.file.path, { // ✅ Fixed
+          folder: "lms",
+          resource_type: "video",
+        });
+
+        lectureData.lecture = {
+          public_id: result.public_id,
+          secure_url: result.secure_url,
+        };
+      } catch (e) {
+        console.error("Cloudinary video upload error:", e.message);
+        return next(new appError("Video upload failed: " + e.message, 500));
+      } finally {
+        if (fs.existsSync(req.file.path)) fs.rmSync(req.file.path);
+      }
+    }
+
+    course.lectures.push(lectureData);
+    course.numberOfLectures = course.lectures.length;
+
+    await course.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Lecture added successfully",
+      course,
+    });
+  } catch (e) {
+    return next(new appError(e.message, 500));
+  }
+};
+
+// ================= DELETE LECTURE =================
+const deleteCourseLectureById = async (req, res, next) => {
+  try {
+    const { courseId, lectureId } = req.params;
+
+    if (!courseId || !lectureId) {
+      return next(new appError("Invalid request", 400));
+    }
+
+    const course = await Course.findById(courseId);
+    if (!course) return next(new appError("Course not found", 404));
+
+    const lecture = course.lectures.find(
+      (l) => l._id.toString() === lectureId
+    );
+
+    if (!lecture) {
+      return next(new appError("Lecture not found", 404));
+    }
+
+    if (lecture.lecture?.public_id) {
+      await cloudinary.uploader.destroy( // ✅ Fixed
+        lecture.lecture.public_id,
+        { resource_type: "video" }
+      );
+    }
+
+    course.lectures = course.lectures.filter(
+      (l) => l._id.toString() !== lectureId
+    );
+
+    course.numberOfLectures = course.lectures.length;
+
+    await course.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Lecture deleted successfully",
+      course,
+    });
+  } catch (e) {
+    return next(new appError(e.message, 500));
+  }
+};
 
 export {
-  register,
-  login,
-  logout,
-  getProfile,
-  forgotPassword,
-  resetPassword,
-  changePassword,
-  updateUser
+  getAllCourses,
+  getLecturesByCourseId,
+  createCourse,
+  updateCourse,
+  removeCourse,
+  addLecturesToCourseById,
+  deleteCourseLectureById,
 };
