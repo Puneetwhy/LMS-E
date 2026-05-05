@@ -5,6 +5,7 @@ import { toast } from "react-hot-toast";
 const initialState = {
     isLoggedIn: localStorage.getItem('isLoggedIn') === 'true' || false,
     role: localStorage.getItem('role') || "",
+    token: localStorage.getItem('token') || "",  // ✅ Load token from storage
     data: (() => {
         try {
             const value = localStorage.getItem("data");
@@ -98,40 +99,62 @@ export const getUserData = createAsyncThunk("/user/details", async () => {
     }
 });
 
+// ✅ Helper to save auth data to localStorage
+function saveAuthToStorage(user, token) {
+    localStorage.setItem("data", JSON.stringify(user));
+    localStorage.setItem("isLoggedIn", "true");
+    localStorage.setItem("role", user.role || "");
+    if (token) localStorage.setItem("token", token); // ✅ Save token
+}
+
 const authSlice = createSlice({
     name: 'auth',
     initialState,
     reducers: {},
     extraReducers: (builder) => {
         builder
-            .addCase(login.fulfilled, (state, action) => {
+            // ✅ register
+            .addCase(createAccount.fulfilled, (state, action) => {
                 if (action.payload?.user) {
-                    localStorage.setItem("data", JSON.stringify(action.payload.user));
-                    localStorage.setItem("isLoggedIn", "true");
-                    localStorage.setItem("role", action.payload.user.role || "");
-                    
+                    const { user, token } = action.payload;
+                    saveAuthToStorage(user, token);
                     state.isLoggedIn = true;
-                    state.data = action.payload.user;
-                    state.role = action.payload.user.role || "";
+                    state.data = user;
+                    state.role = user.role || "";
+                    state.token = token || "";
                 }
             })
 
+            // ✅ login — now also saves token
+            .addCase(login.fulfilled, (state, action) => {
+                if (action.payload?.user) {
+                    const { user, token } = action.payload;
+                    saveAuthToStorage(user, token);
+                    state.isLoggedIn = true;
+                    state.data = user;
+                    state.role = user.role || "";
+                    state.token = token || "";
+                }
+            })
+
+            // ✅ logout — clears everything including token
             .addCase(logout.fulfilled, (state) => {
                 localStorage.clear();
                 state.data = {};
                 state.isLoggedIn = false;
                 state.role = "";
+                state.token = "";
             })
 
+            // ✅ getUserData — refreshes token if returned
             .addCase(getUserData.fulfilled, (state, action) => {
                 if (action.payload?.user) {
-                    localStorage.setItem("data", JSON.stringify(action.payload.user));
-                    localStorage.setItem("isLoggedIn", "true");
-                    localStorage.setItem("role", action.payload.user.role || "");
-
+                    const { user, token } = action.payload;
+                    saveAuthToStorage(user, token);
                     state.isLoggedIn = true;
-                    state.data = action.payload.user;
-                    state.role = action.payload.user.role || "";
+                    state.data = user;
+                    state.role = user.role || "";
+                    if (token) state.token = token;
                 }
             });
     }
