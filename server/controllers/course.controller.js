@@ -1,6 +1,6 @@
 import Course from "../models/course.model.js";
 import appError from "../utils/error.util.js";
-import cloudinary from "cloudinary";
+import { v2 as cloudinary } from "cloudinary"; // ✅ Fixed: was `import cloudinary from "cloudinary"` — v2 didn't exist on default import
 import fs from "fs";
 
 // ================= GET ALL COURSES =================
@@ -65,7 +65,7 @@ const createCourse = async (req, res, next) => {
 
     if (req.file?.path) {
       try {
-        const result = await cloudinary.v2.uploader.upload(req.file.path, {
+        const result = await cloudinary.uploader.upload(req.file.path, { // ✅ Fixed: cloudinary.uploader (not cloudinary.v2.uploader)
           folder: "lms",
           resource_type: "image",
         });
@@ -75,7 +75,8 @@ const createCourse = async (req, res, next) => {
           secure_url: result.secure_url,
         };
       } catch (e) {
-        return next(new appError("Thumbnail upload failed", 500));
+        console.error("Cloudinary upload error:", e.message);
+        return next(new appError("Thumbnail upload failed: " + e.message, 500));
       } finally {
         if (fs.existsSync(req.file.path)) fs.rmSync(req.file.path);
       }
@@ -141,16 +142,14 @@ const removeCourse = async (req, res, next) => {
       return next(new appError("Course not found", 404));
     }
 
-    // 🔥 DELETE THUMBNAIL
     if (course.thumbnail?.public_id) {
-      await cloudinary.v2.uploader.destroy(course.thumbnail.public_id);
+      await cloudinary.uploader.destroy(course.thumbnail.public_id); // ✅ Fixed
     }
 
-    // 🔥 DELETE ALL LECTURES VIDEOS (PARALLEL FOR SPEED)
     await Promise.all(
       course.lectures.map((lec) => {
         if (lec?.lecture?.public_id) {
-          return cloudinary.v2.uploader.destroy(
+          return cloudinary.uploader.destroy( // ✅ Fixed
             lec.lecture.public_id,
             { resource_type: "video" }
           );
@@ -188,7 +187,7 @@ const addLecturesToCourseById = async (req, res, next) => {
 
     if (req.file?.path) {
       try {
-        const result = await cloudinary.v2.uploader.upload(req.file.path, {
+        const result = await cloudinary.uploader.upload(req.file.path, { // ✅ Fixed
           folder: "lms",
           resource_type: "video",
         });
@@ -198,7 +197,8 @@ const addLecturesToCourseById = async (req, res, next) => {
           secure_url: result.secure_url,
         };
       } catch (e) {
-        return next(new appError("Video upload failed", 500));
+        console.error("Cloudinary video upload error:", e.message);
+        return next(new appError("Video upload failed: " + e.message, 500));
       } finally {
         if (fs.existsSync(req.file.path)) fs.rmSync(req.file.path);
       }
@@ -240,7 +240,7 @@ const deleteCourseLectureById = async (req, res, next) => {
     }
 
     if (lecture.lecture?.public_id) {
-      await cloudinary.v2.uploader.destroy(
+      await cloudinary.uploader.destroy( // ✅ Fixed
         lecture.lecture.public_id,
         { resource_type: "video" }
       );
