@@ -12,7 +12,7 @@ export const isLoggedIn = async (req, res, next) => {
       token = req.cookies.token;
     }
 
-    // 2. From headers (Bearer token)
+    // 2. From Authorization header (Bearer token) — fallback for cross-origin
     if (!token && req.headers.authorization?.startsWith("Bearer ")) {
       token = req.headers.authorization.split(" ")[1];
     }
@@ -21,7 +21,6 @@ export const isLoggedIn = async (req, res, next) => {
       return next(new appError("Unauthenticated, please login again", 401));
     }
 
-    // 🔥 ENV safety
     if (!process.env.JWT_SECRET) {
       return next(new appError("JWT secret not configured", 500));
     }
@@ -31,11 +30,10 @@ export const isLoggedIn = async (req, res, next) => {
     const user = await User.findById(decoded.id).select("-password");
 
     if (!user) {
-      return next(new appError("User not found", 401));
+      return next(new appError("User not found, please login again", 401));
     }
 
     req.user = user;
-
     next();
   } catch (error) {
     return next(
