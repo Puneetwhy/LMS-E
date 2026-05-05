@@ -82,7 +82,9 @@ export const getPaymentRecord = createAsyncThunk(
       const res = await axiosInstance.get("/api/v1/payments?count=100");
       return res?.data;
     } catch (err) {
-      return rejectWithValue(err?.response?.data?.message || "Failed to fetch records");
+      const message = err?.response?.data?.message || "Failed to fetch records";
+      // ✅ Don't toast here — admin-only route, silent fail is fine
+      return rejectWithValue(message);
     }
   }
 );
@@ -93,21 +95,48 @@ const razorpaySlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
+      // Loading states
+      .addCase(getRazorPayId.pending, (state) => { state.isLoading = true; })
+      .addCase(purchaseCourseBundle.pending, (state) => { state.isLoading = true; })
+      .addCase(getPaymentRecord.pending, (state) => { state.isLoading = true; })
+
+      // Fulfilled
       .addCase(getRazorPayId.fulfilled, (state, action) => {
+        state.isLoading = false;
         state.key = action.payload?.key || "";
       })
       .addCase(purchaseCourseBundle.fulfilled, (state, action) => {
+        state.isLoading = false;
         state.subscription_id = action.payload?.subscription_id || "";
       })
       .addCase(verifyUserPayment.fulfilled, (state, action) => {
         state.isPaymentVerified = action.payload?.success || false;
       })
+      .addCase(cancelCourseBundle.fulfilled, (state) => {
+        state.subscription_id = "";
+        state.isPaymentVerified = false;
+      })
       .addCase(getPaymentRecord.fulfilled, (state, action) => {
+        state.isLoading = false;
         state.allPayments = action.payload?.allPayments || { count: 0 };
         state.finalMonths = action.payload?.finalMonths || {};
         state.monthlySalesRecord = Array.isArray(action.payload?.monthlySalesRecord)
           ? action.payload.monthlySalesRecord
           : new Array(12).fill(0);
+      })
+
+      // Rejected
+      .addCase(getRazorPayId.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+      })
+      .addCase(purchaseCourseBundle.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+      })
+      .addCase(getPaymentRecord.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
       });
   },
 });
