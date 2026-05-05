@@ -8,12 +8,11 @@ import {
   addLecturesToCourseById,
   deleteCourseLectureById
 } from "../controllers/course.controller.js";
-
 import {
   authorizedRoles,
-  isLoggedIn
+  isLoggedIn,
+  authorizeSubscriber   // ✅ Fixed: was used but never imported
 } from "../middlewares/auth.middleware.js";
-
 import { upload } from "../middlewares/multer.middleware.js";
 
 const router = Router();
@@ -37,7 +36,7 @@ router.get(
   "/:id/lectures",
   isLoggedIn,
   (req, res, next) => {
-    if (req.user?.role === "ADMIN") return next(); // ✅ safe check
+    if (req.user?.role === "ADMIN") return next();
     return authorizeSubscriber(req, res, next);
   },
   getLecturesByCourseId
