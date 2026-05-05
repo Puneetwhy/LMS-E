@@ -13,7 +13,7 @@ export const getAllCourses = createAsyncThunk(
   "courses/getAll",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await axiosInstance.get("/api/v1/courses");   // ← Fixed
+      const res = await axiosInstance.get("/api/v1/courses");
       return Array.isArray(res?.data?.courses) ? res.data.courses : [];
     } catch (error) {
       const message = error?.response?.data?.message || "Failed to load courses";
@@ -33,7 +33,6 @@ export const createNewCourse = createAsyncThunk(
       formData.append("category", userInput.category);
       formData.append("createdBy", userInput.createdBy);
       formData.append("description", userInput.description);
-
       if (userInput.thumbnail) {
         formData.append("thumbnail", userInput.thumbnail);
       }
@@ -57,9 +56,10 @@ export const deleteCourse = createAsyncThunk(
   "courses/delete",
   async (id, { rejectWithValue }) => {
     try {
-      await axiosInstance.delete(`/api/v1/courses/${id}`);
+      const res = await axiosInstance.delete(`/api/v1/courses/${id}`);
       toast.success("Course deleted successfully");
-      return id;
+      // ✅ Return full response so AdminDashboard can check res.payload.success
+      return { success: true, id, ...res?.data };
     } catch (error) {
       const message = error?.response?.data?.message || "Failed to delete course";
       toast.error(message);
@@ -69,32 +69,45 @@ export const deleteCourse = createAsyncThunk(
 );
 
 const courseSlice = createSlice({
-  name: "courses",
+  name: "course",   // ✅ Fixed: was "courses", AdminDashboard reads state.course
   initialState,
   reducers: {},
   extraReducers: (builder) => {
     builder
       .addCase(getAllCourses.pending, (state) => {
         state.isLoading = true;
+        state.error = null;
       })
       .addCase(getAllCourses.fulfilled, (state, action) => {
         state.isLoading = false;
         state.courseData = action.payload || [];
       })
-      .addCase(getAllCourses.rejected, (state) => {
+      .addCase(getAllCourses.rejected, (state, action) => {
         state.isLoading = false;
+        state.error = action.payload;
       })
 
+      .addCase(createNewCourse.pending, (state) => {
+        state.isLoading = true;
+      })
       .addCase(createNewCourse.fulfilled, (state, action) => {
+        state.isLoading = false;
         if (action.payload) {
-          state.courseData.unshift(action.payload); // Add at top
+          state.courseData.unshift(action.payload); // Add new course at top
         }
+      })
+      .addCase(createNewCourse.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
       })
 
       .addCase(deleteCourse.fulfilled, (state, action) => {
         state.courseData = state.courseData.filter(
-          (course) => course._id !== action.payload
+          (course) => course._id !== action.payload.id
         );
+      })
+      .addCase(deleteCourse.rejected, (state, action) => {
+        state.error = action.payload;
       });
   },
 });
