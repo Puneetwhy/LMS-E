@@ -8,11 +8,12 @@ const initialState = {
   error: null
 };
 
+// ================= GET LECTURES =================
 export const getCourseLectures = createAsyncThunk(
   "course/lecture/get",
   async (cid, { rejectWithValue }) => {
     try {
-      const promise = axiosInstance.get(`/courses/${cid}/lectures`);
+      const promise = axiosInstance.get(`/api/v1/courses/${cid}/lectures`); // ✅ Fixed
 
       toast.promise(promise, {
         loading: "Fetching course lectures",
@@ -21,19 +22,16 @@ export const getCourseLectures = createAsyncThunk(
       });
 
       const res = await promise;
-
-      return Array.isArray(res?.data?.lectures)
-        ? res.data.lectures
-        : [];
+      return Array.isArray(res?.data?.lectures) ? res.data.lectures : [];
     } catch (error) {
-      const message =
-        error?.response?.data?.message || "Error fetching lectures";
+      const message = error?.response?.data?.message || "Error fetching lectures";
       toast.error(message);
       return rejectWithValue(message);
     }
   }
 );
 
+// ================= ADD LECTURE =================
 export const addCourseLectures = createAsyncThunk(
   "course/lecture/add",
   async (data, { rejectWithValue }) => {
@@ -44,7 +42,7 @@ export const addCourseLectures = createAsyncThunk(
       formData.append("description", data.description);
 
       const promise = axiosInstance.post(
-        `/courses/${data.id}/lecture`,
+        `/api/v1/courses/${data.id}/lecture`, // ✅ Fixed
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
@@ -56,25 +54,24 @@ export const addCourseLectures = createAsyncThunk(
       });
 
       const res = await promise;
-
       return Array.isArray(res?.data?.course?.lectures)
         ? res.data.course.lectures
         : [];
     } catch (error) {
-      const message =
-        error?.response?.data?.message || "Error adding lecture";
+      const message = error?.response?.data?.message || "Error adding lecture";
       toast.error(message);
       return rejectWithValue(message);
     }
   }
 );
 
+// ================= DELETE LECTURE =================
 export const deleteCourseLectures = createAsyncThunk(
   "course/lecture/delete",
   async ({ courseId, lectureId }, { rejectWithValue }) => {
     try {
       const promise = axiosInstance.delete(
-        `/courses/${courseId}/lecture/${lectureId}`
+        `/api/v1/courses/${courseId}/lecture/${lectureId}` // ✅ Fixed
       );
 
       toast.promise(promise, {
@@ -84,11 +81,9 @@ export const deleteCourseLectures = createAsyncThunk(
       });
 
       await promise;
-
       return lectureId;
     } catch (error) {
-      const message =
-        error?.response?.data?.message || "Error deleting lecture";
+      const message = error?.response?.data?.message || "Error deleting lecture";
       toast.error(message);
       return rejectWithValue(message);
     }
